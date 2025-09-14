@@ -66,6 +66,15 @@ export class DatabaseHostsApi {
     static async delete(uuid: string): Promise<void> {
         const host = await this.get(uuid);
         if (!host) throw new Error('Host não encontrado');
+        // verificar se há bancos de dados associados a este host
+        const { serverTable } = await getTables();
+        const all = await serverTable.getAll()
+        const associated = all.filter(s => s.databases.filter(it => {
+            return it.hostId === uuid
+        }).length > 0);
+        if (associated.length > 0) {
+            throw new Error('Não é possível deletar este host. Existem bancos de dados associados a ele.');
+        }
         await host.delete();
     }
 

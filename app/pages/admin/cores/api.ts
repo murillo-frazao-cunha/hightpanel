@@ -75,5 +75,30 @@ export const deleteCore = async (uuid: string): Promise<{ success: boolean }> =>
         console.error('Erro de rede ao tentar deletar o Core:', error);
         return { success: false };
     }
+}
+
+/** Exporta um core específico em formato JSON estruturado. */
+export const exportCore = async (uuid: string): Promise<any> => {
+    try {
+        const { data } = await api.post('/export', { uuid });
+        return data; // { version, exportedAt, core: {...} }
+    } catch (error) {
+        console.error('Erro ao exportar core:', error);
+        throw new Error('Falha ao exportar core.');
+    }
 };
 
+/** Importa um core a partir de um objeto JSON previamente exportado. */
+export const importCore = async (coreJson: any): Promise<any> => {
+    try {
+        const payload = coreJson.core ? coreJson : { core: coreJson }; // aceita diretamente o objeto ou wrapper
+        const { data } = await api.post('/import', payload);
+        return data; // { imported: true, core: {...} }
+    } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response) {
+            const msg = error.response.data?.error || 'Erro ao importar core.';
+            throw new Error(msg);
+        }
+        throw error;
+    }
+};

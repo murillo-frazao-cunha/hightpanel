@@ -78,7 +78,7 @@ export class ServerTable extends RedisTable<string, Servers> {
             { name: 'ram', type: DataType.LONG, indexed: false },
             { name: 'cpu', type: DataType.LONG, indexed: false },
             { name: 'disk', type: DataType.LONG, indexed: false },
-            { name: 'coreId', type: DataType.STRING, indexed: false },
+            { name: 'coreId', type: DataType.STRING, indexed: true },
             { name: 'coreName', type: DataType.STRING, indexed: false },
             // nodeUuid é uma "chave estrangeira", ideal para indexação.
             { name: 'nodeUuid', type: DataType.STRING, indexed: true },

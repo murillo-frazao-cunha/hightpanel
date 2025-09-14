@@ -86,9 +86,9 @@ const ServersContent: React.FC<ServersContainerProps> = ({ action, id }) => {
         setIsSubmitting(true);
         setError(null);
         try {
-            await saveServer(serverData);
+            const server = await saveServer(serverData);
             addToast(`Servidor "${serverData.name}" salvo com sucesso!`, 'success');
-            router.push('/admin/servers'); // Navega de volta para a lista
+            router.push(`/admin/servers/edit/${server.id}`); // Navega de volta para a lista
         } catch (error: any) {
             addToast(error.message, 'error');
             setError(error.message);

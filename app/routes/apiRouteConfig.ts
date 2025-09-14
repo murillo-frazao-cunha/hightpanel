@@ -8,6 +8,7 @@ import {interpretServers} from "@/backend/routes/admin/server/Server";
 import {interpretNodeHelper} from "@/backend/routes/api/nodes/NodeHelper";
 import {interpretServersClient} from "@/backend/routes/servers/ServersClient";
 import {interpretDatabaseHosts} from "@/backend/routes/admin/database/DatabaseHosts";
+import {interpretServersFileManager} from "@/backend/routes/servers/ServersFileManagerClient";
 
 // --- TIPOS ---
 // Define o formato de uma função que manipula uma rota da API.
@@ -36,6 +37,11 @@ export const apiRoutes: ApiRouteConfig[] = [
     {
         pattern: '/api/user',
         GET: GetUser
+    },
+    {
+        pattern: '/api/client/servers/filemanager/[[action]]',
+        POST: interpretServersFileManager,
+        GET: interpretServersFileManager
     },
     {
         pattern: '/api/client/servers/[[action]]',

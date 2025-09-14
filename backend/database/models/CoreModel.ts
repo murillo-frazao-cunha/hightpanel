@@ -26,6 +26,8 @@ export interface CoreData {
     startupParser: string;
     configSystem: string;
     variables: string;
+    description: string; // novo
+    creatorEmail: string; // novo
 }
 
 // 2. Crie a classe da Entidade Core
@@ -72,6 +74,8 @@ export class CoreTable extends RedisTable<string, Core> {
             { name: 'startupParser', type: DataType.STRING, indexed: false },
             { name: 'configSystem', type: DataType.STRING, indexed: false },
             { name: 'variables', type: DataType.STRING, indexed: false },
+            { name: 'description', type: DataType.STRING, indexed: false },
+            { name: 'creatorEmail', type: DataType.STRING, indexed: true },
         ];
     }
 }

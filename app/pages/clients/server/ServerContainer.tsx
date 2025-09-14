@@ -6,7 +6,7 @@ import { ServerHeader } from './components/ServerHeader';
 import { ServerStats } from './components/ServerStats';
 import { ServerNavbar } from './components/ServerNavbar';
 import { ConsolePage } from './pages/ConsolePage';
-import { FileManagerPage } from './pages/FileManagerPage';
+import { FileManagerPage } from './pages/filemanager/FileManagerPage';
 import { ServerProvider } from "@/app/pages/clients/server/context/ServerContext";
 import { useServer } from './context/ServerContext';
 import StartupPage from "@/app/pages/clients/server/pages/StartupPage";

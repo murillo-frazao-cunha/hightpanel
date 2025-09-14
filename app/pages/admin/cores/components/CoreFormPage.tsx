@@ -8,6 +8,10 @@ import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
 import 'prismjs/themes/prism-okaidia.css'; // Tema escuro para o editor
+import dynamic from 'next/dynamic';
+
+// Monaco apenas para o script de instalação
+const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 interface CoreFormPageProps {
     core?: Core | null;
@@ -23,7 +27,7 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
 
     useEffect(() => {
         if (isEditing && core) {
-            const newFormData = { ...core };
+            const newFormData = { ...core } as any;
 
             // FIX: Garante que os campos de JSON sejam sempre strings para o editor de código.
             // A biblioteca de highlight (prism.js) quebra se receber um objeto.
@@ -33,12 +37,13 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
             if (newFormData.configSystem && typeof newFormData.configSystem !== 'string') {
                 newFormData.configSystem = JSON.stringify(newFormData.configSystem, null, 2);
             }
-
+            if (!newFormData.description) newFormData.description = '';
             setFormData(newFormData);
         } else {
             // Valores padrão para um novo Core
             setFormData({
                 name: '',
+                description: '',
                 installScript: '#!/bin/bash\n# Script de instalação aqui...\napt-get update\napt-get install -y openjdk-17-jre-headless',
                 startupCommand: 'java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar server.jar',
                 dockerImages: [{ name: 'Java 17', image: 'ghcr.io/pterodactyl/yolks:java_17' }],
@@ -150,19 +155,47 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
                 <div className="bg-zinc-900/70 backdrop-blur-sm rounded-lg border border-zinc-700/50">
                     <div className="p-6 border-b border-zinc-700/50">
                         <h2 className="text-xl font-bold text-white">Informações Principais</h2>
-                        <p className="text-zinc-400 text-sm mt-1">O nome que identificará este conjunto de configurações.</p>
+                        <p className="text-zinc-400 text-sm mt-1">O nome, descrição e autor do core.</p>
                     </div>
-                    <div className="p-6">
-                        <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">Nome do Core</label>
-                        <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Minecraft (Paper)" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                    <div className="p-6 space-y-6">
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">Nome do Core</label>
+                            <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Minecraft (Paper)" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição</label>
+                            <textarea name="description" value={(formData as any).description || ''} onChange={(e)=>handleChange(e as any)} rows={3} placeholder="Breve descrição do core..." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all resize-none" />
+                        </div>
+                        {isEditing && core?.creatorEmail && (
+                            <div className="text-xs text-zinc-500">Criado por: <span className="text-zinc-300">{core.creatorEmail}</span></div>
+                        )}
                     </div>
                 </div>
 
                 {/* Painel de Script de Instalação */}
                 <div className="bg-zinc-900/70 backdrop-blur-sm rounded-lg border border-zinc-700/50">
-                    <div className="p-6 border-b border-zinc-700/50"><h2 className="text-xl font-bold text-white">Script de Instalação</h2><p className="text-zinc-400 text-sm mt-1">Este script (Bash) será executado na primeira vez que o servidor for criado.</p></div>
+                    <div className="p-6 border-b border-zinc-700/50">
+                        <h2 className="text-xl font-bold text-white">Script de Instalação</h2>
+                        <p className="text-zinc-400 text-sm mt-1">Este script (Bash) será executado na primeira vez que o servidor for criado. (Editor Monaco)</p>
+                    </div>
                     <div className="p-6">
-                        <div className="custom-scrollbar"><Editor value={formData.installScript || ''} onValueChange={code => handleCodeChange(code, 'installScript')} highlight={code => highlight(code, languages.bash, 'bash')} padding={10} style={{...editorStyle, minHeight: '300px' }} /></div>
+                        <div className="rounded-lg overflow-hidden border border-zinc-700/60">
+                            <MonacoEditor
+                                height="320px"
+                                language="bash"
+                                theme="vs-dark"
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    scrollBeyondLastLine: false,
+                                    wordWrap: 'on',
+                                    automaticLayout: true,
+                                    tabSize: 2,
+                                }}
+                                value={formData.installScript || ''}
+                                onChange={(value) => setFormData(prev => ({ ...prev, installScript: value || '' }))}
+                            />
+                        </div>
                     </div>
                 </div>
 

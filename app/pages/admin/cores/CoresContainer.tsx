@@ -1,7 +1,7 @@
 'use client';
 import React, {useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCores, deleteCore, saveCore, getCoreByUuid } from './api';
+import { getCores, deleteCore, saveCore, getCoreByUuid, exportCore, importCore } from './api';
 import type { Core } from './types/CoreType';
 import CoreListPage from './components/CoreListPage';
 import CoreFormPage from './components/CoreFormPage';
@@ -83,6 +83,38 @@ const CoresContent: React.FC<CoresContainerProps> = ({ action, id }) => {
         }
     };
 
+    const handleExport = async (uuid: string) => {
+        try {
+            const data = await exportCore(uuid);
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const name = data?.core?.name || 'core';
+            a.download = `${name}.core.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+            addToast('Core exportado!', 'success');
+        } catch (e: any) {
+            addToast(e.message || 'Falha ao exportar core', 'error');
+        }
+    };
+
+    const handleImport = async (file: File) => {
+        try {
+            const text = await file.text();
+            let json: any;
+            try { json = JSON.parse(text); } catch { throw new Error('JSON inválido.'); }
+            const result = await importCore(json);
+            addToast(`Core "${result.core?.name || ''}" importado!`, 'success');
+            const data = await getCores();
+            setCores(data);
+        } catch (e: any) {
+            addToast(e.message || 'Falha ao importar core', 'error');
+        }
+    };
+
     const clearError = () => setError(null);
 
     const renderContent = () => {
@@ -101,7 +133,7 @@ const CoresContent: React.FC<CoresContainerProps> = ({ action, id }) => {
             return <CoreFormPage core={editingCore} onSave={handleSaveCore} isSubmitting={isSubmitting} error={error} clearError={clearError} />;
         }
 
-        return <CoreListPage cores={cores} onDelete={requestDeleteCore} />;
+        return <CoreListPage cores={cores} onDelete={requestDeleteCore} onExport={handleExport} onImport={handleImport} />;
     };
 
     return (

@@ -102,10 +102,7 @@ export const NetworkPage: React.FC = () => {
             />
 
             <div className="flex flex-col gap-6">
-                <header>
-                    <h1 className="text-2xl font-bold text-white">Alocações de Rede</h1>
-                    <p className="text-zinc-400 text-sm">Gerencie os endereços de IP e portas disponíveis para seu servidor.</p>
-                </header>
+
 
                 {errorMessage && (
                     <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-lg flex items-center text-sm">

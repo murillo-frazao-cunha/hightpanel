@@ -81,7 +81,10 @@ export async function getByUUID(request: NextRequest) {
         if (!uuid) return NextResponse.json({ error: 'Parâmetros ausentes' }, { status: 400 });
         const nodeInstance = await Nodes.getNode(uuid);
         if (!nodeInstance) return NextResponse.json({ error: 'Node não encontrado' }, { status: 404 });
-        return NextResponse.json(nodeInstance.toJSON());
+        return NextResponse.json({
+            ...nodeInstance.toJSON(),
+            token: process.env.TOKEN
+        });
     } catch (error) {
         console.error('API Error:', error);
         return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
@@ -141,6 +144,14 @@ export async function DeleteNode(request: NextRequest) {
         if (!uuid) return NextResponse.json({ error: 'Parâmetros ausentes' }, { status: 400 });
         const nodeInstance = await Nodes.getNode(uuid);
         if (!nodeInstance) return NextResponse.json({ error: 'Node não encontrado' }, { status: 404 });
+
+        // verificar se tem serviodres
+        const table = await getTables();
+        const servers = await table.serverTable.findByParam('node', uuid);
+        if (servers.length > 0) {
+            return NextResponse.json({ error: 'Não é possível deletar um node que possui servidores ativos.' }, { status: 400 });
+        }
+
         await nodeInstance.delete();
         return NextResponse.json({ success: true });
     } catch (error) {

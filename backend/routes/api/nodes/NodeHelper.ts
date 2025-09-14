@@ -3,6 +3,7 @@ import {Users} from "@/backend/libs/User";
 import {ServerApi} from "@/backend/libs/Server";
 import {getTables} from "@/backend/database/tables/tables";
 import bcrypt from "bcryptjs";
+import {Nodes} from "@/backend/libs/Nodes";
 
 
 export async function interpretNodeHelper(request: NextRequest, params: { [key: string]: string }) {
@@ -23,11 +24,31 @@ export async function interpretNodeHelper(request: NextRequest, params: { [key: 
             return HasPermission(body);
         case "verify-sftp":
             return VerifySFTP(body);
+        case 'fetch-ports':
+            return FetchPorts(body);
         case "admin-permission":
         default:
             return HasAdminPermission(body);
     }
 }
+
+export async function FetchPorts(body: any) {
+    try {
+        const { uuid } = body
+        if(!uuid) {
+            return NextResponse.json({ error: 'uuid is required' }, { status: 400 });
+        }
+        const node = await Nodes.getNode(uuid)
+        if(!node) {
+            return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+        }
+        return NextResponse.json({ port: node.node.port, sftp: node.node.sftp, ssl: node.node.ssl });
+    } catch (error) {
+        console.error('API Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
 export async function VerifySFTP(body: any) {
     try {
         const {userName, password, serverUuid} = body;

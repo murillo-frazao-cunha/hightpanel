@@ -24,7 +24,19 @@ const InfoCard = ({ title, value, total, unit, icon, statusColor, isHighUsage = 
 // Componente não recebe mais a prop 'server'
 export const ServerStats = () => {
     // Pega os dados diretamente do contexto
-    const { server } = useServer();
+    const { server, nodeOffline } = useServer();
+
+    if (nodeOffline) {
+        return (
+            <Panel className="p-6 flex flex-col items-center justify-center text-center bg-amber-950/40 border border-amber-800/40">
+                <div className="w-14 h-14 rounded-full border-4 border-amber-400/30 border-t-amber-400 animate-spin mb-5" />
+                <h3 className="text-amber-300 font-semibold text-lg tracking-wide">Node Offline</h3>
+                <p className="text-amber-400/70 text-xs mt-2 max-w-[180px] leading-relaxed">
+                    Sem comunicação em tempo real. Tentando reconectar automaticamente...
+                </p>
+            </Panel>
+        );
+    }
 
     // Lida com o caso em que os dados ainda não carregaram
     if (!server) {

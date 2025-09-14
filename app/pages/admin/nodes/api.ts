@@ -62,7 +62,8 @@ export async function getStatus(uuid: string): Promise<{ status: NodeStatus, err
  */
 export const saveNode = async (nodeData: Omit<Node, 'id' | 'status' | 'allocations'> & Partial<Pick<Node, 'id' | 'status'>>): Promise<Node> => {
     // A propriedade 'uuid' agora é a referência principal, não 'id'
-    const isEditing = !!nodeData.uuid && mockNodes.some(n => n.uuid === nodeData.uuid);
+    const isEditing = !!nodeData.id
+    console.log(nodeData)
     const url = isEditing ? '/edit' : '/create';
 
     try {

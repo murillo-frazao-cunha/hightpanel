@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import axios from 'axios';
 import { sendServerAction, ServerAction, getServerUsage } from '../api';
 import {useUser} from "@/app/contexts/UserContext";
+import { useRouter } from 'next/navigation';
 
 // --- Tipos ---
 type ServerStatus = 'running' | 'initializing' | 'stopped';
@@ -67,6 +68,7 @@ interface ServerContextType {
     isLoading: boolean;
     isSendingCommand: boolean;
     refreshServer: () => Promise<void>; // novo
+    nodeOffline: boolean; // indica se a node está inacessível (falha no usage)
 }
 
 // --- Log Inicial ---
@@ -109,9 +111,31 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
     const [logs, setLogs] = useState<LogEntry[]>(initialLogs);
     const [isLoading, setIsLoading] = useState(true);
     const [isSendingCommand, setIsSendingCommand] = useState(false);
+    const [nodeOffline, setNodeOffline] = useState(false); // novo estado
     const ws = useRef<WebSocket | null>(null);
     const {user} = useUser();
-    // REMOVIDO: const usageCacheRef = useRef<EphemeralUsageCache | null>(null);
+    const router = useRouter();
+    const prevOfflineRef = useRef(false);
+    const reloadedOnReconnectRef = useRef(false);
+
+    // Força recarregamento via router quando reconectar
+    useEffect(() => {
+        if (nodeOffline) {
+            // Marcamos que ficou offline
+            prevOfflineRef.current = true;
+            reloadedOnReconnectRef.current = false;
+            return;
+        }
+        // Se voltou (antes estava offline) e ainda não recarregou
+        if (!nodeOffline && prevOfflineRef.current && !reloadedOnReconnectRef.current) {
+            reloadedOnReconnectRef.current = true;
+            try {
+                const url = window.location.href
+                console.log("RECARREGANDO....")
+                window.location.href = url
+            } catch {}
+        }
+    }, [nodeOffline, router]);
 
     // Função reutilizável para formatar uptime (extraída para uso no refresh)
     const formatUptime = useCallback((ms?: number): string => {
@@ -159,6 +183,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                 if (!currentId) return;
                 const usage = await getServerUsage(currentId);
                 if (cancelled) return;
+                setNodeOffline(false); // sucesso: node online
                 setServer(prev => {
                     if (!prev) return prev;
                     const memUsedMiB = usage.memory / 1024 / 1024;
@@ -191,7 +216,10 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                     };
                     return next;
                 });
-            } catch {}
+            } catch {
+                // Falha no usage => marcar node offline
+                setNodeOffline(true);
+            }
         };
 
         const startPolling = () => {
@@ -355,7 +383,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
         const socket = new WebSocket(wsUrl);
         ws.current = socket;
 
-        socket.onopen = () => addLog({ type: 'INFO', msg: '\x1b[36;1m[Hight Panel] \x1B[0mConexão com a node estabelecida.' });
+        socket.onopen = () => addLog({ type: 'INFO', msg: '\x1b[36;1m[Ender Panel] \x1B[0mConexão com a node estabelecida.' });
 
         socket.onmessage = (event) => {
             try {
@@ -417,7 +445,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
     }, [addLog, isSendingCommand]);
 
     return (
-        <ServerContext.Provider value={{ server, logs, sendCommand, isLoading, isSendingCommand, refreshServer }}>
+        <ServerContext.Provider value={{ server, logs, sendCommand, isLoading, isSendingCommand, refreshServer, nodeOffline }}>
             {children}
         </ServerContext.Provider>
     );

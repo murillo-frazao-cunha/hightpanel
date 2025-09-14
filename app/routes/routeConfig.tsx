@@ -12,6 +12,7 @@ import CoresContainer from "@/app/pages/admin/cores/CoresContainer";
 import ServersContainer from "@/app/pages/admin/server/ServerContainer";
 import UsersContainer from "@/app/pages/admin/users/UsersContainer";
 import DatabaseHostsContainer from "@/app/pages/admin/database-hosts/DatabaseHostsContainer";
+import ServerMetadata from "@/app/routes/metadatas/ServerMetadata";
 
 // ATUALIZADO: O enum agora é exportado para ser usado pelo nosso RouteGuard.
 export enum PageLogin {
@@ -24,7 +25,7 @@ export enum PageLogin {
 export interface RouteConfig {
     pattern: string;
     component: React.ComponentType<any>; // eslint-disable-line
-    generateMetadata?: (params: any) => Promise<Metadata> | Metadata;  // eslint-disable-line
+    generateMetadata?: (params: any) => Promise<Metadata | undefined> | Metadata | undefined;  // eslint-disable-line
     requiresLogin: PageLogin; // Indica se a rota requer autenticação
 }
 
@@ -34,19 +35,23 @@ export const routes: RouteConfig[] = [
         // Isso vai corresponder a /server/[id] e /server/[id]/[alguma-coisa]
         pattern: '/server/[id]/[[propertie]]',
         component: ServerContainer,
-        generateMetadata: undefined,
+        generateMetadata: ServerMetadata,
         requiresLogin: PageLogin.LOGGED // Esta rota requer que o usuário esteja logado
     },
     {
         pattern: "/",
         component: Home,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender | Dashboard' };
+        },
         requiresLogin: PageLogin.LOGGED
     },
     {
         pattern: '/login',
         component: LoginPage,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender | Login' };
+        },
         requiresLogin: PageLogin.NOTLOGGED
     }
 ];
@@ -56,37 +61,49 @@ export const adminRoutes: RouteConfig[] = [
     {
         pattern: '/admin',
         component: AdminContainer,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin' };
+        },
         requiresLogin: PageLogin.ADMIN
     },
     {
         pattern: '/admin/nodes/[[action]]/[[id]]', // action pode ser 'create' ou 'edit', id é o uuid do node
         component: NodesContainer,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Nodes' };
+        },
         requiresLogin: PageLogin.ADMIN
     },
     {
         pattern: '/admin/cores/[[action]]/[[id]]', // action pode ser 'create' ou 'edit', id é o uuid do core
         component: CoresContainer,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Cores' };
+        },
         requiresLogin: PageLogin.ADMIN
     },
     {
         pattern: '/admin/servers/[[action]]/[[id]]', // action pode ser 'create' ou 'edit', id é o uuid do server
         component: ServersContainer,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Servers' };
+        },
         requiresLogin: PageLogin.ADMIN
     },
     {
         pattern: '/admin/users/[[action]]/[[id]]', // action pode ser 'create' ou 'edit', id é o uuid do user
         component: UsersContainer, // Substitua pelo componente correto de usuários quando disponível
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Users' };
+        },
         requiresLogin: PageLogin.ADMIN
     },
     {
         pattern: '/admin/database-hosts/[[action]]/[[id]]',
         component: DatabaseHostsContainer,
-        generateMetadata: undefined,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Database Hosts' };
+        },
         requiresLogin: PageLogin.ADMIN
     }
 ]

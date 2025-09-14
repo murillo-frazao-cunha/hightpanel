@@ -289,42 +289,6 @@ async function GetAllServers(currentUser: Profile, request: NextRequest) {
 
             // @ts-ignore
             serverJson.primaryAllocation = (await tables.allocationTable.get(server.primaryAllocationId))?.toJSON() || "teste";
-            // @ts-ignore
-            serverJson.additionalAllocation = serverJson.additionalAllocationIds
-                ? await Promise.all(
-                    serverJson.additionalAllocationIds.map(async (id: string) => {
-                        return (await tables.allocationTable.get(id))?.toJSON();
-                    })
-                )
-                : [];
-            // @ts-ignore
-            serverJson.core = (await tables.coreTable.get(server.coreId))?.toJSON()
-
-            const node = await server.getNode();
-            if (node) {
-                serverJson.nodeip = node.node.ip
-                serverJson.nodePort = node.node.port
-                serverJson.nodeSftp = node.node.sftp
-            }
-            // Enriquecer databases com dados do host
-            if (Array.isArray(serverJson.databases)) {
-                for (const db of serverJson.databases) {
-                    if (!db.host || !db.port || db.phpmyAdminLink === undefined) {
-                        try {
-                            const h = await DatabaseHostsApi.get(db.hostId);
-                            if (h) {
-                                db.host = h.host;
-                                // @ts-ignore
-                                db.port = h.port;
-                                // @ts-ignore
-                                db.phpmyAdminLink = h.phpmyAdminLink || '';
-                            }
-                        } catch {}
-                    }
-                }
-            }
-
-
 
             return serverJson;
         }));

@@ -1,13 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUsers, saveUser } from './api';
+import { getUsers, saveUser, deleteUser } from './api';
 import type { User } from './types/UserType';
 import UserListPage from './components/UserListPage';
 import UserFormPage from './components/UserFormPage';
 import { Background } from '@/app/pages/clients/ui/Background';
 import { AdminSidebar } from "@/app/pages/admin/ui/AdminSidebar";
 import { ToastProvider, useToast } from '@/app/contexts/ToastContext';
+import { ConfirmModal } from '@/app/pages/clients/ui/ModalConfirm';
+import { useUser } from '@/app/contexts/UserContext';
 
 interface UsersContainerProps {
     action?: string;
@@ -21,6 +23,9 @@ const UsersContent: React.FC<UsersContainerProps> = ({ action, id }) => {
     const router = useRouter();
     const { addToast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user: currentUser } = useUser();
+    const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     useEffect(() => {
         setIsLoading(true);
@@ -36,9 +41,13 @@ const UsersContent: React.FC<UsersContainerProps> = ({ action, id }) => {
     }, [action, id]);
 
 
-    const handleSaveUser = async (userData: Omit<User, 'id'>) => {
+    const handleSaveUser = async (userData: Partial<User>) => {
         setIsSubmitting(true);
         try {
+            // Se estivermos editando, garantir que id esteja presente
+            if (editingUser && editingUser.id) {
+                userData.id = editingUser.id;
+            }
             await saveUser(userData);
             addToast(`Usuário "${userData.username}" salvo com sucesso!`, 'success');
             router.push('/admin/users');
@@ -46,6 +55,29 @@ const UsersContent: React.FC<UsersContainerProps> = ({ action, id }) => {
             addToast(error.message, 'error');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const refreshUsers = async () => {
+        const data = await getUsers();
+        setUsers(data);
+    };
+
+    const handleRequestDelete = (user: User) => {
+        setDeleteTarget(user);
+        setIsDeleteOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            await deleteUser(deleteTarget.id);
+            addToast(`Usuário "${deleteTarget.username}" excluído.`, 'success');
+            setIsDeleteOpen(false);
+            setDeleteTarget(null);
+            await refreshUsers();
+        } catch (e: any) {
+            addToast(e.message, 'error');
         }
     };
 
@@ -69,12 +101,22 @@ const UsersContent: React.FC<UsersContainerProps> = ({ action, id }) => {
             return <UserFormPage user={editingUser} onSave={handleSaveUser} isSubmitting={isSubmitting} />;
         }
 
-        return <UserListPage users={users} />;
+        return <UserListPage users={users} onRequestDelete={handleRequestDelete} currentUserId={currentUser?.id} />;
     };
 
     return (
         <main className="flex-1 p-6 lg:p-10 overflow-y-auto custom-scrollbar">
             {renderContent()}
+            <ConfirmModal
+                isOpen={isDeleteOpen}
+                onClose={() => { setIsDeleteOpen(false); setDeleteTarget(null); }}
+                onConfirm={handleConfirmDelete}
+                title="Excluir usuário"
+                message={`Tem certeza que deseja excluir o usuário "${deleteTarget?.username}"? Esta ação não pode ser desfeita.`}
+                icon="trash"
+                confirmText="Excluir"
+                confirmColor="rose"
+            />
         </main>
     );
 };

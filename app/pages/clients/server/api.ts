@@ -213,6 +213,94 @@ export async function deleteServerDatabase(uuid: string, name: string): Promise<
     }
 }
 
+// File Manager Interfaces
+export interface FMItem {
+    name: string;
+    type: 'file' | 'folder';
+    size: number | null;
+    lastModified: number;
+    path: string; // sempre relativo começando sem barra inicial opcional
+}
+
+interface ListResponse { path: string; items: FMItem[] }
+
+const fileApiBase = '/filemanager';
+
+export async function fmList(uuid: string, relPath: string = ''): Promise<ListResponse> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/list`, { uuid, path: relPath });
+        return data as ListResponse;
+    } catch (e: any) {
+        console.error('fmList erro', e);
+        throw new Error(e.response?.data?.error || 'Falha ao listar diretório.');
+    }
+}
+
+export async function fmRead(uuid: string, filePath: string): Promise<{ content: string; size: number; lastModified: number; path: string; }> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/read`, { uuid, path: filePath });
+        return data;
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao ler arquivo.');
+    }
+}
+
+export async function fmWrite(uuid: string, filePath: string, content: string): Promise<void> {
+    try {
+        await api.post(`${fileApiBase}/write`, { uuid, path: filePath, content });
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao salvar arquivo.');
+    }
+}
+
+export async function fmRename(uuid: string, filePath: string, newName: string): Promise<{ newPath: string; oldPath: string; }> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/rename`, { uuid, path: filePath, newName });
+        return data;
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao renomear.');
+    }
+}
+
+export async function fmDownload(uuid: string, filePath: string): Promise<{ fileName: string; size: number; base64: string; }> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/download`, { uuid, path: filePath });
+        return data;
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao baixar arquivo.');
+    }
+}
+
+export async function fmMassDelete(uuid: string, paths: string[]): Promise<any> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/mass`, { uuid, action: 'delete', paths });
+        return data;
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao excluir itens.');
+    }
+}
+
+export async function fmMassArchive(uuid: string, paths: string[], archiveName?: string): Promise<any> {
+    try {
+        const { data } = await api.post(`${fileApiBase}/mass`, { uuid, action: 'archive', paths, archiveName });
+        return data;
+    } catch (e: any) {
+        throw new Error(e.response?.data?.error || 'Falha ao arquivar itens.');
+    }
+}
+
+export async function fmMkdir(uuid: string, dirPath: string): Promise<any> {
+    try { const { data } = await api.post(`${fileApiBase}/mkdir`, { uuid, path: dirPath }); return data; } catch(e:any){ throw new Error(e.response?.data?.error || 'Falha ao criar diretório.'); }
+}
+
+export async function fmMove(uuid: string, from: string, to: string): Promise<any> {
+    try { const { data } = await api.post(`${fileApiBase}/move`, { uuid, from, to }); return data; } catch(e:any){ throw new Error(e.response?.data?.error || 'Falha ao mover.'); }
+}
+
+export async function fmUpload(uuid: string, filePath: string, data: { contentBase64?: string; content?: string }): Promise<any> {
+    try { const payload: any = { uuid, path: filePath }; if(data.contentBase64) payload.contentBase64 = data.contentBase64; else payload.content = data.content || ''; const { data:resp } = await api.post(`${fileApiBase}/upload`, payload); return resp; } catch(e:any){ console.log(e); throw new Error(e.response?.data?.error || 'Falha ao enviar arquivo.'); }
+}
+
 // Polling helper para status (opcional)
 export function createStatusPoller(uuid: string, intervalMs = 4000, onUpdate?: (s: ServerStatusResponse) => void) {
     let timer: any;

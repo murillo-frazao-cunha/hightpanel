@@ -22,6 +22,8 @@ export async function interpretUsers(request: NextRequest, params: { [key: strin
             return CreateUser(request);
         case "edit":
             return EditUser(request, currentUser.id); // Passa o ID do admin logado
+        case "delete":
+            return DeleteUser(request, currentUser.id);
         // O padrão (sem ação) ou "get-all" vai listar os usuários
         case "get-all":
         default:
@@ -107,3 +109,36 @@ async function EditUser(request: NextRequest, adminId: string) {
     }
 }
 
+/**
+ * Remove um usuário existente.
+ */
+async function DeleteUser(request: NextRequest, adminId: string) {
+    if (request.method !== "POST" && request.method !== "DELETE") {
+        return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    }
+    try {
+        const body = request.method === 'POST' ? await request.json() : await request.json();
+        const { uuid } = body;
+        if (!uuid) {
+            return NextResponse.json({ error: 'O UUID do usuário é obrigatório.' }, { status: 400 });
+        }
+        if (uuid === adminId) {
+            return NextResponse.json({ error: 'Você não pode excluir seu próprio usuário.' }, { status: 403 });
+        }
+        try {
+            await Users.deleteUser(uuid);
+            return NextResponse.json({ success: true });
+        } catch (err: any) {
+            if (err.message.includes('servidores')) {
+                return NextResponse.json({ error: err.message }, { status: 409 });
+            }
+            if (err.message.includes('não encontrado')) {
+                return NextResponse.json({ error: err.message }, { status: 404 });
+            }
+            throw err;
+        }
+    } catch (error) {
+        console.error('API Error DeleteUser:', error);
+        return NextResponse.json({ error: 'Erro ao deletar o usuário.' }, { status: 500 });
+    }
+}

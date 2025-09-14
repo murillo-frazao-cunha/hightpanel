@@ -30,12 +30,14 @@ export class Nodes {
                     token: process.env.TOKEN,
                     ...data
                 },
-                timeout: 5000 // 5 seconds timeout
+                timeout: 10000, // 5 seconds timeout
+                maxContentLength: 60 * 1024 * 1024,
+                maxBodyLength: 60 * 1024 * 1024
             });
             return response.data;
         } catch (e) {
             // @ts-ignore
-            console.error(e.response.data)
+            console.error(e.response?.data || e.message)
             // @ts-ignore
             throw new Error(`Failed to send request to node: ${e.message}`);
         }

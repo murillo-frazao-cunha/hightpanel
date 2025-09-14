@@ -9,7 +9,7 @@ interface UserCreateData {
     name: string;
     email: string;
     admin: boolean; // Opcional, padrão é false
-    password: string
+    password: string;
 }
 
 // Interface para os dados que podem ser atualizados
@@ -17,6 +17,7 @@ interface UserUpdateData {
     username?: string;
     email?: string;
     admin?: boolean;
+    password?: string; // nova senha opcional
 }
 
 /**
@@ -65,21 +66,22 @@ export class Users {
      */
     public static async createUser(data: UserCreateData): Promise<Profile> {
         const { profileTable } = await getTables();
-
         // 1. Garante que não existe usuário com o mesmo e-mail
         const existingUser = await this.findByEmail(data.email);
         if (existingUser) {
             throw new Error('Já existe um usuário com este e-mail.');
         }
 
-        data.password = bcrypt.hashSync(data.password, 10)
+        const hashedPassword = bcrypt.hashSync(data.password, 10);
 
-        // 2. Cria e salva a nova entidade
+        // 2. Cria e salva a nova entidade (campos padronizados ao schema)
         const newUser = await profileTable.insert(randomUUID(), {
-            username: data.name, // Usa o nome como username inicial
+            username: data.name,
             email: data.email,
-            admin: data.admin, // Novos usuários nunca são admins por padrão
-            password: data.password
+            admin: data.admin,
+            passwordHash: hashedPassword,
+            createdAt: Date.now(),
+            lastLogin: 0
         });
 
         return newUser;
@@ -97,19 +99,31 @@ export class Users {
             throw new Error('Usuário не encontrado.');
         }
 
-        // Atualiza apenas os campos fornecidos
-        if (data.username !== undefined) {
-            userInstance.username = data.username;
-        }
-        if (data.email !== undefined) {
-            userInstance.email = data.email;
-        }
-        if (data.admin !== undefined) {
-            userInstance.admin = data.admin;
+        if (data.username !== undefined) userInstance.username = data.username;
+        if (data.email !== undefined) userInstance.email = data.email;
+        if (data.admin !== undefined) userInstance.admin = data.admin;
+        if (data.password) {
+            userInstance.passwordHash = bcrypt.hashSync(data.password, 10);
         }
 
         await userInstance.save();
         return userInstance;
     }
-}
 
+    /**
+     * Remove um usuário do sistema.
+     * @param uuid - O UUID do usuário a ser removido.
+     */
+    public static async deleteUser(uuid: string): Promise<void> {
+        const userInstance = await this.getUser(uuid);
+        if (!userInstance) {
+            throw new Error('Usuário não encontrado.');
+        }
+        const { serverTable } = await getTables();
+        const servers = await serverTable.findByParam('ownerId', uuid);
+        if (servers.length > 0) {
+            throw new Error('Não é possível excluir: usuário possui servidores.');
+        }
+        await userInstance.delete();
+    }
+}

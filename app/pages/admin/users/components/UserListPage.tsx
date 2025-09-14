@@ -6,9 +6,11 @@ import { Icon } from "@/app/pages/clients/ui/Icon";
 
 interface UserListPageProps {
     users: User[];
+    onRequestDelete?: (user: User) => void;
+    currentUserId?: string;
 }
 
-const UserRow = ({ user }: { user: User; }) => {
+const UserRow = ({ user, onRequestDelete, isSelf }: { user: User; onRequestDelete?: (u: User) => void; isSelf: boolean; }) => {
     // Gera uma cor de fundo com base no UUID do usuário para o avatar
     const bgColor = `hsl(${user.id.charCodeAt(0) % 360}, 50%, 30%)`;
 
@@ -35,7 +37,16 @@ const UserRow = ({ user }: { user: User; }) => {
                 )}
 
                 {/* Ações */}
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-3">
+                    {!isSelf && (
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRequestDelete && onRequestDelete(user); }}
+                            title="Excluir usuário"
+                            className="p-2 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-colors"
+                        >
+                            <Icon name="trash" className="w-5 h-5" />
+                        </button>
+                    )}
                     <Icon name="chevronRight" className="w-6 h-6 text-zinc-600 group-hover:text-white transition-colors" />
                 </div>
             </div>
@@ -43,7 +54,7 @@ const UserRow = ({ user }: { user: User; }) => {
     );
 };
 
-const UserListPage: React.FC<UserListPageProps> = ({ users }) => {
+const UserListPage: React.FC<UserListPageProps> = ({ users, onRequestDelete, currentUserId }) => {
     return (
         <>
             <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
@@ -60,7 +71,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ users }) => {
             <div className="flex flex-col gap-4">
                 {users.length > 0 ? (
                     users.map(user => (
-                        <UserRow key={user.id} user={user} />
+                        <UserRow key={user.id} user={user} onRequestDelete={onRequestDelete} isSelf={user.id === currentUserId} />
                     ))
                 ) : (
                     <div className="text-center py-16 bg-zinc-900/40 rounded-lg border border-dashed border-zinc-700">

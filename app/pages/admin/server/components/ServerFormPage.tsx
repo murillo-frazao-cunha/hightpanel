@@ -25,7 +25,7 @@ interface ServerFormPageProps {
 
 // Componente CustomSelect (sem alterações)
 const CustomSelect = ({ options, value, onChange, placeholder, disabled = false }: {
-    options: { value: string; label: string }[];
+    options: { value: string; label: string; disabled?: boolean }[];
     value: string;
     onChange: (value: string) => void;
     placeholder: string;
@@ -65,11 +65,19 @@ const CustomSelect = ({ options, value, onChange, placeholder, disabled = false 
             </button>
             {isOpen && !disabled && (
                 <ul className="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-auto custom-scrollbar">
-                    {options.map((option, index) => (
-                        <li key={`${option.value}-${index}`} onClick={() => handleSelect(option.value)} className="px-4 py-2 text-white hover:bg-teal-500/20 cursor-pointer">
-                            {option.label}
-                        </li>
-                    ))}
+                    {options.map((option, index) => {
+                        const optDisabled = option.disabled;
+                        return (
+                            <li
+                                key={`${option.value}-${index}`}
+                                onClick={() => { if (!optDisabled) handleSelect(option.value); }}
+                                className={`px-4 py-2 text-white ${optDisabled ? 'opacity-40 cursor-not-allowed line-through' : 'hover:bg-teal-500/20 cursor-pointer'}`}
+                                aria-disabled={optDisabled}
+                            >
+                                {option.label}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
         </div>
@@ -328,7 +336,7 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                             <label className="block text-sm font-medium text-zinc-400 mb-2">Node</label>
                             <CustomSelect
                                 placeholder="Selecione um Node..."
-                                options={nodes.map(node => ({ value: node.uuid, label: `${node.name} (${node.status})` }))}
+                                options={nodes.map(node => ({ value: node.uuid, label: `${node.name} (${node.status})`, disabled: node.status && node.status.toLowerCase() !== 'online' }))}
                                 value={formData.nodeUuid || ''}
                                 onChange={handleNodeChange}
                             />
@@ -439,4 +447,3 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
 };
 
 export default ServerFormPage;
-

@@ -107,25 +107,16 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
         }
     };
 
-    const generateConfig = () => {
-        return `
-uuid: '${formData.uuid || ''}'
-id: '${formData.id || ''}'
-password: 'SENHA NO .ENV SERÁ POSSIVEL PEGAR PELA API'
-path: '/etc/hightpanel'
-port: ${formData.port || '8080'}
-sftp: ${formData.sftp || '2022'}
-panel:
-  remote: 'URL DO PAINEL'
-ssl:
-  enabled: ${formData.ssl || false}
-  cert: '/etc/letsencrypt/live/${formData.ip || 'ip'}/fullchain.pem'
-  key: '/etc/letsencrypt/live/${formData.ip || 'ip'}/privkey.pem'
-        `.trim();
+    // @ts-ignore
+    const panelToken = node?.token
+    console.log(panelToken)
+    const remoteOrigin = typeof window !== 'undefined' ? window.location.origin : 'URL_DO_PAINEL';
+    const generateCommand = () => {
+        return `npm run configure -- --remote=${remoteOrigin} --uuid=${formData.uuid || ''} --token=${panelToken || ''}`;
     };
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(generateConfig());
+        navigator.clipboard.writeText(generateCommand());
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -216,13 +207,13 @@ ssl:
                     {isEditing && (
                         <div className="bg-zinc-900/70 backdrop-blur-sm rounded-lg border border-zinc-700/50">
                             <div className="p-6 border-b border-zinc-700/50">
-                                <h2 className="text-xl font-bold text-white">Configuração (config.yml)</h2>
-                                <p className="text-zinc-400 text-sm mt-1">Use este conteúdo para configurar o daemon no seu servidor.</p>
+                                <h2 className="text-xl font-bold text-white">Comando de Configuração</h2>
+                                <p className="text-zinc-400 text-sm mt-1">Execute este comando no servidor para configurar o daemon.</p>
                             </div>
                             <div className="p-6">
                                 <div className="relative bg-black/50 rounded-lg">
-                                    <pre className="p-4 text-xs text-zinc-300 whitespace-pre-wrap overflow-auto custom-scrollbar h-full max-h-72">{generateConfig()}</pre>
-                                    <button onClick={copyToClipboard} className="absolute top-2 right-2 p-2 bg-zinc-800/70 rounded-md hover:bg-zinc-700/70 transition-colors" title="Copiar Configuração">
+                                    <pre className="p-4 text-xs text-teal-300 whitespace-pre-wrap overflow-auto custom-scrollbar h-full max-h-40">{generateCommand()}</pre>
+                                    <button onClick={copyToClipboard} className="absolute top-2 right-2 p-2 bg-zinc-800/70 rounded-md hover:bg-zinc-700/70 transition-colors" title="Copiar Comando">
                                         {copied ? <Icon name="check" className="w-5 h-5 text-green-400" /> : <Icon name="copy" className="w-5 h-5 text-zinc-300" />}
                                     </button>
                                 </div>
@@ -247,7 +238,7 @@ ssl:
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">IP Externo (Opcional)</label>
-                                    <input type="text" value={newAllocation.externalIp} onChange={e => setNewAllocation(p => ({...p, externalIp: e.target.value}))} placeholder="node1.hight.me" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={newAllocation.externalIp} onChange={e => setNewAllocation(p => ({...p, externalIp: e.target.value}))} placeholder="node1.ender.me" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">Porta(s)</label>

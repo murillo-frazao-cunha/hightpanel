@@ -20,5 +20,6 @@ export interface Core {
     stopCommand: string;
     startupParser: string; // JSON string
     configSystem: string;  // JSON string
+    description?: string; // novo
+    creatorEmail?: string; // novo
 }
-

@@ -38,13 +38,13 @@ export class Cores {
         const { coreTable } = await getTables();
         const uuid = randomUUID();
 
-        // Serializa os campos que são arrays de objetos para JSON
         const coreDataForDB: CoreData = {
             ...data,
+            description: data.description || '',
+            creatorEmail: data.creatorEmail || 'unknown',
             dockerImages: JSON.stringify(data.dockerImages || []),
             variables: JSON.stringify(data.variables || []),
-        };
-
+        } as CoreData;
 
         return coreTable.insert(uuid, coreDataForDB);
     }

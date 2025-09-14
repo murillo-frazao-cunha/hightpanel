@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getUser from "@/backend/routes/api/userHelper";
 import { Cores } from '@/backend/libs/Cores';
+import {getTables} from "@/backend/database/tables/tables";
 
 
 /**
@@ -25,6 +26,10 @@ export async function interpretCores(request: NextRequest, params: { [key: strin
             return getByUUID(request);
         case "delete":
             return DeleteCore(request);
+        case "export":
+            return ExportCore(request);
+        case "import":
+            return ImportCore(request);
         default:
             return GetAllCores();
     }
@@ -69,6 +74,8 @@ export async function getByUUID(request: NextRequest) {
 export async function CreateCore(request: NextRequest) {
     if (request.method !== "POST") return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     try {
+        const user = await getUser();
+        if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
         const body = await request.json();
         if (!body.name) {
             return NextResponse.json({ error: 'O nome do Core é obrigatório' }, { status: 400 });
@@ -79,7 +86,18 @@ export async function CreateCore(request: NextRequest) {
             return NextResponse.json({ error: 'Já existe um Core com esse nome' }, { status: 409 });
         }
 
-        const newCore = await Cores.createCore(body);
+        const newCore = await Cores.createCore({
+            name: body.name,
+            installScript: body.installScript || '',
+            startupCommand: body.startupCommand || '',
+            stopCommand: body.stopCommand || 'stop',
+            dockerImages: body.dockerImages || [],
+            variables: body.variables || [],
+            startupParser: body.startupParser || '{}',
+            configSystem: body.configSystem || '{}',
+            description: body.description || '',
+            creatorEmail: user.email,
+        });
         return NextResponse.json(newCore.toJSON(), { status: 201 });
     } catch (error) {
         console.error('API Error CreateCore:', error);
@@ -93,6 +111,8 @@ export async function CreateCore(request: NextRequest) {
 export async function EditCore(request: NextRequest) {
     if (request.method !== "POST") return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     try {
+        const user = await getUser();
+        if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
         const body = await request.json();
         const { uuid } = body;
         if (!uuid) return NextResponse.json({ error: 'UUID ausente' }, { status: 400 });
@@ -100,7 +120,6 @@ export async function EditCore(request: NextRequest) {
         const coreInstance = await Cores.getCore(uuid);
         if (!coreInstance) return NextResponse.json({ error: 'Core não encontrado' }, { status: 404 });
 
-        // Verifica se o novo nome já está em uso por outro Core
         if (body.name) {
             const otherCore = await Cores.findByName(body.name);
             if (otherCore && otherCore.id !== uuid) {
@@ -108,26 +127,20 @@ export async function EditCore(request: NextRequest) {
             }
         }
 
-        // Serializa os campos que são arrays de objetos para JSON antes de salvar
         const dataToUpdate = {
             ...body,
             dockerImages: JSON.stringify(body.dockerImages || []),
             variables: JSON.stringify(body.variables || []),
         };
-
-        // Remove o UUID para não tentar sobrescrever a chave primária como um campo
         delete dataToUpdate.uuid;
+        delete (dataToUpdate as any).creatorEmail; // impedir alteração
 
-        // Atualiza os campos da instância um por um
         for (const key in dataToUpdate) {
             if (Object.prototype.hasOwnProperty.call(dataToUpdate, key)) {
                 (coreInstance as any)[key] = (dataToUpdate as any)[key];
             }
         }
-
-        // Salva as alterações na instância do Core
         await coreInstance.save();
-
         return NextResponse.json(coreInstance.toJSON());
     } catch (error) {
         console.error('API Error EditCore:', error);
@@ -147,10 +160,12 @@ export async function DeleteCore(request: NextRequest) {
         const coreInstance = await Cores.getCore(uuid);
         if (!coreInstance) return NextResponse.json({ error: 'Core não encontrado' }, { status: 404 });
 
-        // Adicionar lógica para verificar se o Core está em uso por algum servidor antes de deletar
-        // Ex: const servers = await serverTable.findByParam('coreUuid', uuid);
-        // if (servers.length > 0) return NextResponse.json({ error: 'Este Core está em uso e não pode ser deletado.' }, { status: 409 });
-
+        // verificar se existe servidor com ela
+        const table = await getTables()
+        const serversWithCore = await table.serverTable.findByParam('coreId', uuid);
+        if(serversWithCore.length > 0) {
+            return NextResponse.json({ error: 'Não é possível deletar este Core pois existem servidores utilizando ele.' }, { status: 400 });
+        }
         await coreInstance.delete();
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -159,3 +174,76 @@ export async function DeleteCore(request: NextRequest) {
     }
 }
 
+/**
+ * Exporta um Core como JSON completo (inclui arrays desserializados).
+ */
+export async function ExportCore(request: NextRequest) {
+    if (request.method !== 'POST') return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    try {
+        const { uuid } = await request.json();
+        if (!uuid) return NextResponse.json({ error: 'UUID ausente' }, { status: 400 });
+        const core = await Cores.getCore(uuid);
+        if (!core) return NextResponse.json({ error: 'Core não encontrado' }, { status: 404 });
+        const data = core.toJSON();
+        const { id: originalId, ...rest } = data;
+        return NextResponse.json({
+            version: 2,
+            exportedAt: new Date().toISOString(),
+            core: { originalId, ...rest }
+        });
+    } catch (e) {
+        console.error('API Error ExportCore:', e);
+        return NextResponse.json({ error: 'Erro ao exportar o Core' }, { status: 500 });
+    }
+}
+
+/**
+ * Importa um Core de um JSON exportado previamente.
+ * Se já existir um core com o mesmo nome, adiciona um sufixo incremental.
+ */
+export async function ImportCore(request: NextRequest) {
+    if (request.method !== 'POST') return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    try {
+        const user = await getUser();
+        if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+        const body = await request.json();
+        const payload = body.core || body;
+        delete payload.id; delete payload.uuid; delete payload.originalId; delete payload.creatorEmail;
+
+        const required = ['name','installScript','startupCommand','stopCommand','dockerImages','variables','startupParser','configSystem'];
+        for (const field of required) {
+            if (payload[field] == null) {
+                return NextResponse.json({ error: `Campo ausente no JSON: ${field}` }, { status: 400 });
+            }
+        }
+
+        let baseName: string = payload.name;
+        let finalName = baseName;
+        let counter = 1;
+        while (await Cores.findByName(finalName)) {
+            finalName = `${baseName}-import${counter > 1 ? '-' + counter : ''}`;
+            counter++;
+        }
+
+        const dockerImages = Array.isArray(payload.dockerImages) ? payload.dockerImages : [];
+        const variables = Array.isArray(payload.variables) ? payload.variables : [];
+
+        const newCore = await Cores.createCore({
+            name: finalName,
+            installScript: payload.installScript,
+            startupCommand: payload.startupCommand,
+            stopCommand: payload.stopCommand,
+            dockerImages,
+            variables,
+            startupParser: typeof payload.startupParser === 'string' ? payload.startupParser : JSON.stringify(payload.startupParser || {}),
+            configSystem: typeof payload.configSystem === 'string' ? payload.configSystem : JSON.stringify(payload.configSystem || {}),
+            description: payload.description || '',
+            creatorEmail: user.email,
+        });
+
+        return NextResponse.json({ imported: true, core: newCore.toJSON() }, { status: 201 });
+    } catch (e) {
+        console.error('API Error ImportCore:', e);
+        return NextResponse.json({ error: 'Erro ao importar o Core' }, { status: 500 });
+    }
+}

@@ -6,7 +6,7 @@ import { useServer } from '../context/ServerContext';
 import { AnsiUp } from 'ansi_up';
 
 export const ConsolePage = () => {
-    const { logs, sendCommand, isSendingCommand } = useServer();
+    const { logs, sendCommand, isSendingCommand, nodeOffline } = useServer();
     const [input, setInput] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
     const ansiUpRef = useRef<AnsiUp | null>(null);
@@ -83,13 +83,20 @@ export const ConsolePage = () => {
     };
 
     return (
-        <Panel className="h-[564px] flex flex-col font-mono text-sm p-4">
-            <div ref={scrollRef} className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+        <Panel className="h-[564px] flex flex-col font-mono text-sm p-4 relative">
+            {nodeOffline && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
+                    <div className="w-24 h-24 border-4 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
+                    <p className="mt-6 text-amber-300 font-semibold text-lg tracking-wide">Node offline</p>
+                    <p className="mt-1 text-amber-500 text-xs uppercase">aguardando reconexão...</p>
+                </div>
+            )}
+            <div ref={scrollRef} className="flex-grow overflow-y-auto pr-2 custom-scrollbar opacity-100">
                 {logs.map((log: any, i: any) => {
                     const normalized = normalizeAnsi(log.msg || '');
                     const html = ansiUpRef.current ? ansiUpRef.current.ansi_to_html(normalized) : normalized.replace(/\x1b\[[0-9;]*m/g, '');
                     return (
-                        <div key={i} className="whitespace-pre-wrap break-words leading-relaxed" dangerouslySetInnerHTML={{ __html: html }} />
+                        <div key={i} className="whitespace-pre-wrap break-words leading-relaxed text-[12px]" dangerouslySetInnerHTML={{ __html: html }} />
                     );
                 })}
             </div>
@@ -98,11 +105,11 @@ export const ConsolePage = () => {
                 <input
                     type="text"
                     value={input}
-                    disabled={isSendingCommand}
+                    disabled={isSendingCommand || nodeOffline}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleCommand}
                     className="w-full bg-transparent focus:outline-none text-zinc-200 placeholder:text-zinc-500 disabled:opacity-40"
-                    placeholder={isSendingCommand ? 'Enviando comando...' : 'Digite um comando...'}
+                    placeholder={nodeOffline ? 'Node offline - aguardando...' : (isSendingCommand ? 'Enviando comando...' : 'Digite um comando...')}
                 />
             </div>
         </Panel>

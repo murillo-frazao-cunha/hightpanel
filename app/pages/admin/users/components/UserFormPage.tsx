@@ -6,7 +6,7 @@ import type { User } from '../types/UserType';
 
 interface UserFormPageProps {
     user?: User | null;
-    onSave: (user: Omit<User, 'id'>) => Promise<void>;
+    onSave: (user: Partial<User>) => Promise<void>;
     isSubmitting: boolean;
 }
 
@@ -16,13 +16,13 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
 
     useEffect(() => {
         if (isEditing) {
-            setFormData({ ...user });
+            setFormData({ ...user, password: '' }); // password vazio para edição
         } else {
-            // Valores padrão para um novo usuário
             setFormData({
                 username: '',
                 email: '',
                 admin: false,
+                password: ''
             });
         }
     }, [user, isEditing]);
@@ -35,12 +35,19 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
 
     const handleSave = async () => {
         if (isSubmitting) return;
-        // Validação simples
         if (!formData.username || !formData.email) {
             alert('Nome de usuário e e-mail são obrigatórios.');
             return;
         }
-        await onSave(formData as User);
+        if (!isEditing) {
+            if (!formData.password || formData.password.trim() === '') {
+                alert('Senha é obrigatória para criar um usuário.');
+                return;
+            }
+        } else {
+            // Se edição e senha vazia, não enviaremos (tratado em saveUser)
+        }
+        await onSave(formData as Partial<User>);
     };
 
     return (
@@ -67,6 +74,11 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-zinc-400 mb-2">Endereço de E-mail</label>
                             <input id="email" type="email" name="email" value={formData.email || ''} onChange={handleChange} placeholder="ex: fulano@provedor.com" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-zinc-400 mb-2">{isEditing ? 'Nova Senha (opcional)' : 'Senha (obrigatória)'}</label>
+                            <input id="password" type="password" name="password" value={formData.password || ''} onChange={handleChange} placeholder={isEditing ? 'Deixe em branco para manter a senha atual' : 'Defina uma senha segura'} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            {isEditing && <p className="text-xs text-zinc-500 mt-1">Se deixar vazio a senha permanecerá a mesma.</p>}
                         </div>
                     </div>
                 </div>

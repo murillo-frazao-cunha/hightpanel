@@ -24,6 +24,12 @@ export class Profile extends RedisEntity<string, ProfileData> {
     declare createdAt: number;
     declare lastLogin: number;
     declare admin: boolean;
+
+    // Oculta passwordHash ao serializar
+    toJSON() {
+        const { passwordHash, ...rest } = this.data as any;
+        return { id: this.id, ...rest };
+    }
 }
 
 // 3. Crie a classe da Tabela, estendendo RedisTable

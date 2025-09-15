@@ -13,6 +13,7 @@ import ServersContainer from "@/app/pages/admin/server/ServerContainer";
 import UsersContainer from "@/app/pages/admin/users/UsersContainer";
 import DatabaseHostsContainer from "@/app/pages/admin/database-hosts/DatabaseHostsContainer";
 import ServerMetadata from "@/app/routes/metadatas/ServerMetadata";
+import {ServerProvider} from "@/app/pages/clients/server/context/ServerContext";
 
 // ATUALIZADO: O enum agora é exportado para ser usado pelo nosso RouteGuard.
 export enum PageLogin {
@@ -29,12 +30,20 @@ export interface RouteConfig {
     requiresLogin: PageLogin; // Indica se a rota requer autenticação
 }
 
+// eslint-disable-next-line react/prop-types
+const ServerContainerWrapper = (props: any) => (
+    <ServerProvider>
+        <ServerContainer {...props} />
+    </ServerProvider>
+);
+
+
 export const routes: RouteConfig[] = [
     {
         // ATUALIZADO: A rota agora usa [[propertie]] para um segmento opcional.
         // Isso vai corresponder a /server/[id] e /server/[id]/[alguma-coisa]
         pattern: '/server/[id]/[[propertie]]',
-        component: ServerContainer,
+        component: ServerContainerWrapper,
         generateMetadata: ServerMetadata,
         requiresLogin: PageLogin.LOGGED // Esta rota requer que o usuário esteja logado
     },

@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import { Sidebar } from '../ui/Sidebar';
 import { Background } from '../ui/Background';
 import { ServerHeader } from './components/ServerHeader';
@@ -7,15 +6,13 @@ import { ServerStats } from './components/ServerStats';
 import { ServerNavbar } from './components/ServerNavbar';
 import { ConsolePage } from './pages/ConsolePage';
 import { FileManagerPage } from './pages/filemanager/FileManagerPage';
-import { ServerProvider } from "@/app/pages/clients/server/context/ServerContext";
-import { useServer } from './context/ServerContext';
 import StartupPage from "@/app/pages/clients/server/pages/StartupPage";
 import SettingsPage from "@/app/pages/clients/server/pages/SettingsPage";
 import NetworkPage from "@/app/pages/clients/server/pages/NetworkPage";
 import DatabasePage from "@/app/pages/clients/server/pages/DatabasePage";
 import { ServerUsageCharts } from './components/ServerUsageCharts';
 
-// --- Tipos ---
+// --- Tipos -- -
 interface ServerContainerProps {
     id: string;
     propertie?: string; // console, files, settings, etc.
@@ -24,14 +21,12 @@ interface ServerContainerProps {
 // --- Componente Principal ---
 export default function ServerContainer({ id, propertie }: ServerContainerProps) {
     return (
-        <ServerProvider>
-            <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans-serif] flex">
-                <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
-                <Background />
-                <Sidebar />
-                <ServerContent id={id} propertie={propertie} />
-            </div>
-        </ServerProvider>
+        <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans-serif] flex">
+            <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
+            <Background />
+            <Sidebar />
+            <ServerContent id={id} propertie={propertie} />
+        </div>
     );
 }
 

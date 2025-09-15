@@ -6,6 +6,7 @@ import {useUser} from "@/app/contexts/UserContext";
 import { useRouter } from 'next/navigation';
 
 // --- Tipos ---
+// --- Tipos ---
 type ServerStatus = 'running' | 'initializing' | 'stopped';
 
 interface ServerData {

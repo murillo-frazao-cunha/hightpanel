@@ -1,7 +1,7 @@
-import {getTables} from "@/backend/database/tables/tables";
+import {getTables} from "../database/tables/tables";
 
 import {randomUUID} from "crypto";
-import {Profile} from "@/backend/database/models/ProfileTable";
+import {Profile} from "../database/models/ProfileTable";
 import bcrypt from "bcryptjs";
 
 // Interface para os dados de criação de usuário

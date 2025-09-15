@@ -9,6 +9,7 @@ import {interpretNodeHelper} from "@/backend/routes/api/nodes/NodeHelper";
 import {interpretServersClient} from "@/backend/routes/servers/ServersClient";
 import {interpretDatabaseHosts} from "@/backend/routes/admin/database/DatabaseHosts";
 import {interpretServersFileManager} from "@/backend/routes/servers/ServersFileManagerClient";
+import {createFirstUser, interpreteIncludesUser} from "@/backend/routes/includes_user";
 
 // --- TIPOS ---
 // Define o formato de uma função que manipula uma rota da API.
@@ -29,6 +30,14 @@ export interface ApiRouteConfig {
 }
 
 export const apiRoutes: ApiRouteConfig[] = [
+    {
+        pattern: '/api/includes_user',
+        GET: interpreteIncludesUser
+    },
+    {
+        pattern: '/api/includes_user/create_first_user',
+        POST: createFirstUser
+    },
     {
         pattern: "/api/nodes/helper/[[action]]",
         GET: interpretNodeHelper,

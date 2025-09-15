@@ -41,7 +41,7 @@ declare global {
 function getCachedConnector() {
     if (process.env.NODE_ENV === 'production') {
         // Em produção, o módulo é inicializado uma vez.
-        const connector = new RedisConnector(dbConfig);
+        const connector = new RedisConnector(dbConfig, process.env.ENCRYPTATION_TOKEN);
         return { connector, connectionPromise: null };
     } else {
         // Em desenvolvimento, usamos o cache global para persistir entre recargas.
@@ -49,7 +49,7 @@ function getCachedConnector() {
         if (!global.redisConnector) {
             // @ts-ignore
             global.redisConnector = {
-                connector: new RedisConnector(dbConfig),
+                connector: new RedisConnector(dbConfig, process.env.ENCRYPTATION_TOKEN),
                 connectionPromise: null
             };
         }

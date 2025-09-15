@@ -47,7 +47,6 @@ function getCachedConnector() {
         // Em desenvolvimento, usamos o cache global para persistir entre recargas.
         // @ts-ignore
         if (!global.redisConnector) {
-            console.log("DEV: Criando nova instância e promise para Redis GLOBAL.");
             // @ts-ignore
             global.redisConnector = {
                 connector: new RedisConnector(dbConfig),

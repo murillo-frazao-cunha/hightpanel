@@ -13,7 +13,7 @@ import StartupPage from "@/app/pages/clients/server/pages/StartupPage";
 import SettingsPage from "@/app/pages/clients/server/pages/SettingsPage";
 import NetworkPage from "@/app/pages/clients/server/pages/NetworkPage";
 import DatabasePage from "@/app/pages/clients/server/pages/DatabasePage";
-
+import { ServerUsageCharts } from './components/ServerUsageCharts';
 
 // --- Tipos ---
 interface ServerContainerProps {
@@ -40,27 +40,37 @@ function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
     const renderActivePage = () => {
         switch (activePage) {
             case 'files': return <FileManagerPage />;
-            case 'startup': return <StartupPage></StartupPage>
-            case "settings": return <SettingsPage></SettingsPage>
-            case 'network': return <NetworkPage></NetworkPage>
-            case 'database': return <DatabasePage></DatabasePage>
+            case 'startup': return <StartupPage />;
+            case "settings": return <SettingsPage />;
+            case 'network': return <NetworkPage />;
+            case 'database': return <DatabasePage />;
             case 'console':
             default:
                 return <ConsolePage />;
         }
     };
+
     return (
         <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
             <ServerHeader />
-            <div className="flex flex-col lg:flex-row gap-8">
+            <ServerNavbar serverId={id} activePage={activePage} />
+
+            {/* Layout principal para conteúdo e estatísticas */}
+            <div className="mt-4 flex flex-col lg:flex-row gap-8">
                 <div className="w-full lg:w-3/4">
-                    <ServerNavbar serverId={id} activePage={activePage} />
                     {renderActivePage()}
                 </div>
                 <div className="w-full lg:w-1/4 flex flex-col gap-4">
                     <ServerStats />
                 </div>
             </div>
+
+            {/* Renderização condicional dos gráficos em largura total */}
+            {activePage === 'console' && (
+                <div className="mt-8">
+                    <ServerUsageCharts />
+                </div>
+            )}
         </main>
     );
 }

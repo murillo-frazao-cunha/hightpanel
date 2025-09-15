@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const match = findMatchingRoute(pathname);
 
     if (match?.route.generateMetadata) {
+        // @ts-ignore
         return match.route.generateMetadata(match.params);
     }
 

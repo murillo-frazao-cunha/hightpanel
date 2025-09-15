@@ -39,7 +39,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const match = findMatchingRoute(pathname);
 
     if (match?.route.generateMetadata) {
-        return match.route.generateMetadata(match.params);
+        const metadata = match.route.generateMetadata(match.params)
+        if(metadata === undefined) {
+            return {
+                title: 'Página não encontrada'
+            }
+        } else {
+            // @ts-ignore
+            return metadata
+        }
     }
 
     return {

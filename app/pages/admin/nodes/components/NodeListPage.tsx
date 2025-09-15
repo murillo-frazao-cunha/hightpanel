@@ -33,7 +33,12 @@ const NodeRow = ({ node, onDelete }: { node: Node; onDelete: (uuid: string) => v
 
                 {/* Informações Principais */}
                 <div className="ml-5 flex-grow">
-                    <h3 className="text-lg font-bold text-white">{node.name}</h3>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        {node.name}
+                        {node.location && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800/70 border border-zinc-700 text-zinc-300 font-normal tracking-wide uppercase">{node.location}</span>
+                        )}
+                    </h3>
                     <div className="flex items-center gap-2 text-zinc-400 text-sm font-mono mt-1">
                         <Icon name="globe" className="w-4 h-4" />
                         <span>{node.ip}</span>
@@ -96,4 +101,3 @@ const NodeListPage: React.FC<NodeListPageProps> = ({ nodes, onDelete }) => {
 };
 
 export default NodeListPage;
-

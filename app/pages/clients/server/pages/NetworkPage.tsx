@@ -12,7 +12,7 @@ import { changeAllocation, ClientServerAllocation } from '../api';
 // Componente para a linha de cada alocação
 const AllocationRow = ({ allocation, isPrimary, onRemove, isSubmitting }: any) => {
     return (
-        <div className="bg-zinc-900/60 p-4 rounded-lg flex items-center gap-4 border border-zinc-800">
+        <Panel className="bg-zinc-900/60 p-4 flex items-center gap-4 border border-zinc-800">
             <Icon name="network" className="w-6 h-6 text-zinc-500 flex-shrink-0" />
 
             <div className="flex-grow">
@@ -44,7 +44,7 @@ const AllocationRow = ({ allocation, isPrimary, onRemove, isSubmitting }: any) =
                     </button>
                 )}
             </div>
-        </div>
+        </Panel>
     );
 };
 
@@ -134,7 +134,7 @@ export const NetworkPage: React.FC = () => {
                 </div>
 
                 {/* Painel de Ações */}
-                <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 flex justify-between items-center mt-4">
+                <Panel className="bg-zinc-900/50 p-4 border border-zinc-800 flex justify-between items-center mt-4">
                     <p className="text-sm text-zinc-400">
                         Você pode adicionar mais { (server.addicionalAllocationsNumbers || 0) - additionalAllocations.length } alocação(ões).
                     </p>
@@ -146,7 +146,7 @@ export const NetworkPage: React.FC = () => {
                         <Icon name={isSubmitting && !allocationToDelete ? 'loader' : 'plus'} className={`w-4 h-4 ${(isSubmitting && !allocationToDelete) && 'animate-spin'}`} />
                         {isSubmitting && !allocationToDelete ? 'Processando...' : 'Adicionar Alocação'}
                     </button>
-                </div>
+                </Panel>
             </div>
         </>
     );

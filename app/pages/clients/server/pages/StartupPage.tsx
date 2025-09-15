@@ -1,6 +1,6 @@
 // app/components/server/pages/StartupPage.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Panel } from '../../ui/Panel';
 import { Icon } from '../../ui/Icon';
 import { useServer } from '../context/ServerContext';
@@ -8,14 +8,19 @@ import { editStartup } from '../api';
 
 // Helper para um painel genérico, para evitar repetição
 const InfoPanel = ({ title, children, className = '' }: { title: string, children: React.ReactNode, className?: string }) => (
-    <div className={`bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 ${className}`}>
+    <Panel className={`bg-zinc-900/50 p-4 border border-zinc-800 ${className}`}>
         <h3 className="text-xs uppercase text-zinc-400 font-semibold tracking-wider mb-3">{title}</h3>
         {children}
-    </div>
+    </Panel>
 );
 
 export const StartupPage: React.FC = () => {
-    const { server, isLoading } = useServer();
+    const { server: ctxServer, isLoading: ctxLoading } = useServer();
+    const serverRef = useRef(ctxServer);
+    if(!serverRef.current && ctxServer) serverRef.current = ctxServer;
+    const server = serverRef.current;
+    const isLoading = ctxLoading && !server;
+
     const [variables, setVariables] = useState<Record<string, string>>({});
     const [dockerImage, setDockerImage] = useState('');
 
@@ -33,10 +38,10 @@ export const StartupPage: React.FC = () => {
             (server.core?.variables || []).forEach((v: any) => {
                 initialVars[v.envVariable] = server.environment?.[v.envVariable] || '';
             });
-            console.log(server)
             setVariables(initialVars);
             setDockerImage(server.dockerImage || '');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [server?.id]); // <-- A MUDANÇA ESTÁ AQUI
 
     const handleVariableChange = (envVar: string, value: string) => {
@@ -63,6 +68,11 @@ export const StartupPage: React.FC = () => {
         try {
             await editStartup(server.id, dockerImage, variables);
             setSuccessMessage('Configurações de inicialização salvas com sucesso!');
+            // atualiza objeto congelado localmente
+            if(serverRef.current){
+                serverRef.current.dockerImage = dockerImage;
+                serverRef.current.environment = { ...serverRef.current.environment, ...variables };
+            }
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (error: any) {
             setErrorMessage(error.message || 'Falha ao salvar as configurações.');

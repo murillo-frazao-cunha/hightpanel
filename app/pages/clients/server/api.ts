@@ -68,6 +68,9 @@ export interface ServerUsage {
     state?: string; // estado bruto vindo do node
     startedAt?: number; // timestamp (ms)
     uptimeMs?: number; // duração em ms
+    disk: number
+    networkIn: number
+    networkOut: number
 }
 
 // ---- Funções ----
@@ -264,7 +267,9 @@ export async function fmRename(uuid: string, filePath: string, newName: string):
 
 export async function fmDownload(uuid: string, filePath: string): Promise<{ fileName: string; size: number; base64: string; }> {
     try {
-        const { data } = await api.post(`${fileApiBase}/download`, { uuid, path: filePath });
+        const { data } = await api.post(`${fileApiBase}/download`, { uuid, path: filePath }, {
+            maxContentLength: 1000000000000000
+        });
         return data;
     } catch (e: any) {
         throw new Error(e.response?.data?.error || 'Falha ao baixar arquivo.');
@@ -299,6 +304,10 @@ export async function fmMove(uuid: string, from: string, to: string): Promise<an
 
 export async function fmUpload(uuid: string, filePath: string, data: { contentBase64?: string; content?: string }): Promise<any> {
     try { const payload: any = { uuid, path: filePath }; if(data.contentBase64) payload.contentBase64 = data.contentBase64; else payload.content = data.content || ''; const { data:resp } = await api.post(`${fileApiBase}/upload`, payload); return resp; } catch(e:any){ console.log(e); throw new Error(e.response?.data?.error || 'Falha ao enviar arquivo.'); }
+}
+
+export async function fmUnarchive(uuid: string, archivePath: string, destination: string): Promise<any> {
+    try { const { data } = await api.post(`${fileApiBase}/unarchive`, { uuid, path: archivePath, destination }); return data; } catch(e:any){ console.error(e); throw new Error(e.response?.data?.error || 'Falha ao desarquivar.'); }
 }
 
 // Polling helper para status (opcional)

@@ -131,6 +131,7 @@ const Home = () => {
                 let status: ServerStatus = 'stopped';
                 let cpuUsed = 0;
                 let ramUsedGB = 0;
+                let diskUsed = 0
 
                 if (usageData) {
                     const stateMap: Record<string, ServerStatus> = {
@@ -144,6 +145,7 @@ const Home = () => {
                     if (typeof usageData.memory === 'number') {
                         ramUsedGB = usageData.memory / 1024 / 1024 / 1024;
                     }
+                    diskUsed = typeof usageData.disk === 'number' ? usageData.disk / 1024 / 1024 / 1024 : 0;
                 }
 
                 return {
@@ -153,7 +155,7 @@ const Home = () => {
                     status,
                     cpu: { used: cpuUsed, total: server.cpu || 100 },
                     ram: { used: parseFloat(ramUsedGB.toFixed(2)), total: parseFloat(ramInGB.toFixed(2)), unit: 'GB' },
-                    disk: { used: parseFloat((diskInGB * 0.2).toFixed(2)), total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' },
+                    disk: { used: parseFloat((diskUsed * 0.2).toFixed(2)), total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' },
                     error: false,
                 };
 
@@ -295,12 +297,11 @@ const Home = () => {
                     </div>
                     {user?.admin && (
                         <div className="flex items-center gap-3">
-                            <span className={`font-semibold text-sm transition-colors ${!showPublic ? 'text-white' : 'text-zinc-400'}`}>Meus Servidores</span>
+                            <span className={`font-semibold text-sm transition-colors text-white`}>{showPublic ? 'Outros servidores' : 'Meus Servidores'}</span>
                             <label htmlFor="server-toggle" className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="server-toggle" className="sr-only peer" checked={showPublic} onChange={() => setShowPublic(!showPublic)} />
                                 <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:bg-teal-900 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
                             </label>
-                            <span className={`font-semibold text-sm transition-colors ${showPublic ? 'text-white' : 'text-zinc-400'}`}>Outros Servidores</span>
                         </div>
                     )}
                 </header>

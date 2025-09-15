@@ -2,7 +2,10 @@
 import React, { useEffect, useState, useRef, Fragment } from 'react';
 import { Icon } from '../../../ui/Icon';
 import { useServer } from "../../context/ServerContext";
-import { fmList, fmWrite, fmRename, fmDownload, fmMassDelete, fmMassArchive, fmMkdir, fmMove, fmUpload, FMItem } from '../../api';
+import {
+    fmList, fmWrite, fmRename, fmDownload, fmMassDelete, fmMassArchive, fmMkdir, fmMove, fmUpload, FMItem,
+    fmUnarchive
+} from '../../api';
 import { FileEditorView } from './FileEditorView';
 import { ConfirmModal } from '../../../ui/ModalConfirm';
 import { InputModal } from '../../../ui/InputModal';
@@ -140,6 +143,17 @@ const FileManagerListView = ({ uuid, currentPath }: { uuid: string, currentPath:
         if (paths.length === 0) return;
         setMassBusy(true);
         try { await fmMassDelete(uuid, paths); await refresh(); }
+        catch (e: any) { alert(e.message); } finally { setMassBusy(false); }
+    };
+
+    const handleUnarchive = async (item: FMItem) => {
+        if (item.type !== 'file' && !item.name.endsWith('.rar') && !item.name.endsWith(".zip") && !item.name.endsWith(".tar.gz")) return;
+        setMassBusy(true);
+        console.log(pathSegments)
+        const path = item.path.split('/');
+        path.pop();
+
+        try { await fmUnarchive(uuid, item.path, path.join("/")); await refresh(); }
         catch (e: any) { alert(e.message); } finally { setMassBusy(false); }
     };
 
@@ -305,6 +319,9 @@ const FileManagerListView = ({ uuid, currentPath }: { uuid: string, currentPath:
                             <div className="w-48 flex-shrink-0 text-right text-zinc-400 text-xs pointer-events-none">{formatDateAgo(item.lastModified)}</div>
                             <div className="w-40 flex-shrink-0 flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                                 {item.type === 'file' && <ActionButtonWithTooltip icon="download" label="Baixar" onClick={()=>handleDownload(item)} />}
+                                {item.type === 'file' && (item.name.endsWith(".zip") || item.name.endsWith(".rar") || item.name.endsWith(".tar.gz")) && (
+                                    <ActionButtonWithTooltip icon="archive" label="Desarquivar" onClick={() => { handleUnarchive(item) }} />
+                                )}
                                 <ActionButtonWithTooltip icon="edit" label="Renomear" onClick={() => { setRenaming(item.path); setNewName(item.name); }} />
                                 <ActionButtonWithTooltip icon="trash" label="Apagar" onClick={() => { setDeletePaths([item.path]); setModal('delete'); }} className="hover:text-rose-400"/>
                             </div>
@@ -359,7 +376,7 @@ export const FileManagerPage = () => {
             )}
             <div className={nodeOffline ? 'pointer-events-none select-none opacity-40' : view.mode === 'edit' ? 'w-full h-screen' : ''} >
                 {view.mode === 'list' && <FileManagerListView uuid={uuid} currentPath={view.path} />}
-                {view.mode === 'edit' && <FileEditorView uuid={uuid} filePath={view.path} onBack={handleBackFromEditor} />}
+                {view.mode === 'edit' && <FileEditorView uuid={uuid} filePath={view.path} onBackAction={handleBackFromEditor} />}
             </div>
         </div>
     );

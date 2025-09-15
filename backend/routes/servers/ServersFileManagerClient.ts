@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getUser from '@/backend/routes/api/userHelper';
 import { ServerApi } from '@/backend/libs/Server';
-import { Profile } from '@/backend/database/models/ProfileTable';
 
 // Ações permitidas pelo file manager
-const FILE_MANAGER_ACTIONS = new Set(['list','read','write','rename','download','mass','mkdir','move','upload']);
+const FILE_MANAGER_ACTIONS = new Set(['list','read','write','rename','download','mass','mkdir','move','upload', 'unarchive']);
 
 /**
  * Roteador para funcionalidades de File Manager (cliente) -> repassa para a node.
@@ -136,6 +135,19 @@ export async function interpretServersFileManager(request: NextRequest, params: 
         if (typeof body.contentBase64 !== 'string' && typeof body.content !== 'string') {
             return NextResponse.json({ error: 'contentBase64 ou content é obrigatório para upload.' }, { status: 400 });
         }
+    }
+
+    if(action === 'unarchive'){
+        // path, destination necessarios
+        if (typeof body.path !== 'string' || !body.path.trim()) {
+            return NextResponse.json({ error: 'path é obrigatório para unarchive.' }, { status: 400 });
+        }
+        if (typeof body.destination !== 'string') {
+            return NextResponse.json({ error: 'destination é obrigatório para unarchive.' }, { status: 400 });
+        }
+        payload.destination = body.destination;
+        payload.path = body.path;
+
     }
 
     try {

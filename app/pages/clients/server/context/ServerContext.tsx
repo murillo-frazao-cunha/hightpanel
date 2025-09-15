@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { sendServerAction, ServerAction, getServerUsage } from '../api';
+import { sendServerAction, ServerAction } from '../api';
 import {useUser} from "@/app/contexts/UserContext";
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +17,8 @@ interface ServerData {
     maxCpu: number; // limite
     ram: { used: number; total: number; unit: string; };
     disk: { used: number; total: number; unit: string; };
+    networkIn: number
+    networkOut: number
     uptime: string;
     startedAt?: number;
     environment: any
@@ -67,7 +69,7 @@ interface ServerContextType {
     sendCommand: (command: string) => Promise<void> | void;
     isLoading: boolean;
     isSendingCommand: boolean;
-    refreshServer: () => Promise<void>; // novo
+    refreshServer: () => Promise<ServerData | null>; // novo
     nodeOffline: boolean; // indica se a node está inacessível (falha no usage)
 }
 
@@ -85,6 +87,8 @@ interface EphemeralUsageCache {
     ramTotal: number;
     uptime: string;
     startedAt?: number;
+    networkIn: number
+    networkOut: number;
 }
 
 // Cache global em memória que persiste até fechar/recarregar a aba
@@ -113,6 +117,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
     const [isSendingCommand, setIsSendingCommand] = useState(false);
     const [nodeOffline, setNodeOffline] = useState(false); // novo estado
     const ws = useRef<WebSocket | null>(null);
+    const usageWs = useRef<WebSocket | null>(null);
     const {user} = useUser();
     const router = useRouter();
     const prevOfflineRef = useRef(false);
@@ -166,68 +171,13 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    // Efeito para buscar os dados iniciais do servidor e uso (polling) - MANTIDO COMO ORIGINAL
+    // Efeito para buscar os dados iniciais do servidor
     useEffect(() => {
         if (!uuid) return;
-        let usageTimer: any;
         let cancelled = false;
-        let startedPolling = false;
 
         // Cache em memória entre montagens
         const cached = uuid ? usageSessionStore[uuid] : undefined;
-
-        const pollUsage = async () => {
-            if (!uuid) return;
-            try {
-                const currentId = server?.id;
-                if (!currentId) return;
-                const usage = await getServerUsage(currentId);
-                if (cancelled) return;
-                setNodeOffline(false); // sucesso: node online
-                setServer(prev => {
-                    if (!prev) return prev;
-                    const memUsedMiB = usage.memory / 1024 / 1024;
-                    const memLimitMiB = usage.memoryLimit > 0 ? usage.memoryLimit / 1024 / 1024 : prev.ram.total;
-                    const stateRaw = (usage.state || '').toLowerCase();
-                    const stateMap: Record<string, ServerStatus> = {
-                        running: 'running', online: 'running', started: 'running', start: 'running',
-                        starting: 'initializing', initializing: 'initializing', install: 'initializing', installing: 'initializing', creating: 'initializing', pending: 'initializing',
-                        stopping: 'stopped', stopped: 'stopped', offline: 'stopped', error: 'stopped'
-                    };
-                    const mappedStatus: ServerStatus = stateMap[stateRaw] || prev.status;
-                    const uptimeSource = (typeof usage.uptimeMs === 'number' && usage.uptimeMs > 0)
-                        ? usage.uptimeMs
-                        : (typeof usage.startedAt === 'number' ? Date.now() - usage.startedAt : 0);
-                    const next = {
-                        ...prev,
-                        status: mappedStatus,
-                        cpu: usage.cpu,
-                        ram: { ...prev.ram, used: memUsedMiB, total: memLimitMiB },
-                        uptime: formatUptime(uptimeSource),
-                        startedAt: usage.startedAt
-                    };
-                    usageSessionStore[prev.id] = {
-                        status: next.status,
-                        cpu: next.cpu,
-                        ramUsed: next.ram.used,
-                        ramTotal: next.ram.total,
-                        uptime: next.uptime,
-                        startedAt: next.startedAt
-                    };
-                    return next;
-                });
-            } catch {
-                // Falha no usage => marcar node offline
-                setNodeOffline(true);
-            }
-        };
-
-        const startPolling = () => {
-            if (startedPolling) return;
-            startedPolling = true;
-            pollUsage();
-            usageTimer = setInterval(pollUsage, 1000);
-        };
 
         const fetchBaseData = async () => {
             setIsLoading(true);
@@ -261,6 +211,8 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                         maxCpu: data.cpu || base.maxCpu,
                         ram: { ...base.ram, total: data.ram || base.ram.total },
                         disk: { ...base.disk, total: data.disk || base.disk.total },
+                        networkIn: data.networkIn || 0,
+                        networkOut: data.networkOut || 0,
                         nodeip: data.nodeip || 'N/A',
                         nodePort: data.nodePort || 0,
                         nodeSftp: data.nodeSftp || 0,
@@ -285,7 +237,6 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                     }
                     return merged;
                 });
-                startPolling();
             } catch (e) {
                 if (!server) {
                     setServer(null);
@@ -298,63 +249,161 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
 
         return () => {
             cancelled = true;
-            if (usageTimer) clearInterval(usageTimer);
-            // NÃO limpa usageSessionStore aqui (persistência até fechar aba)
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uuid, server?.id, formatUptime]);
+    }, [uuid]);
+
+    // Efeito para o WebSocket de USAGE
+    useEffect(() => {
+        if (!server?.id || !user?.id || !server.nodeip || !server.nodePort) return;
+
+        // @ts-ignore
+        if (usageWs.current && [WebSocket.OPEN, WebSocket.CONNECTING].includes(usageWs.current.readyState)) {
+            return;
+        }
+
+        const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${proto}//${server.nodeip}:${server.nodePort}/api/v1/servers/usages?serverId=${server.id}&userUuid=${user.id}`;
+
+        const socket = new WebSocket(wsUrl);
+        usageWs.current = socket;
+
+        socket.onopen = () => {
+            console.log('[WS][usages] Conexão estabelecida.');
+            setNodeOffline(false);
+        };
+
+        socket.onmessage = (event) => {
+            console.log("recebido")
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'usage' && data.usage) {
+                    const { usage } = data;
+                    setNodeOffline(false);
+
+                    setServer(prev => {
+                        if (!prev) return prev;
+
+                        const memUsedMiB = usage.memory / 1024 / 1024;
+                        const memLimitMiB = usage.memoryLimit > 0 ? usage.memoryLimit / 1024 / 1024 : prev.ram.total;
+                        const diskUsedMib = usage.disk / 1024 / 1024;
+                        const networkInKib = usage.networkIn / 1024;
+                        const networkOutKib = usage.networkOut / 1024;
+
+                        const stateRaw = (usage.state || '').toLowerCase();
+                        const stateMap: Record<string, ServerStatus> = {
+                            running: 'running', online: 'running', started: 'running', start: 'running',
+                            starting: 'initializing', initializing: 'initializing', install: 'initializing', installing: 'initializing', creating: 'initializing', pending: 'initializing',
+                            stopping: 'stopped', stopped: 'stopped', offline: 'stopped', error: 'stopped'
+                        };
+                        const mappedStatus: ServerStatus = stateMap[stateRaw] || prev.status;
+
+                        const uptimeSource = (typeof usage.uptimeMs === 'number' && usage.uptimeMs > 0)
+                            ? usage.uptimeMs
+                            : (typeof usage.startedAt === 'number' ? Date.now() - usage.startedAt : 0);
+
+                        const next = {
+                            ...prev,
+                            status: mappedStatus,
+                            cpu: usage.cpu,
+                            networkIn: networkInKib,
+                            networkOut: networkOutKib,
+                            ram: { ...prev.ram, used: memUsedMiB, total: memLimitMiB },
+                            disk: { ...prev.disk, used: diskUsedMib },
+                            uptime: formatUptime(uptimeSource),
+                            startedAt: usage.startedAt,
+                        };
+
+                        usageSessionStore[prev.id] = {
+                            status: next.status,
+                            cpu: next.cpu,
+                            networkIn: next.networkIn,
+                            networkOut: next.networkOut,
+                            ramUsed: next.ram.used,
+                            ramTotal: next.ram.total,
+                            uptime: next.uptime,
+                            startedAt: next.startedAt
+                        };
+
+                        return next;
+                    });
+                } else if (data.type === 'error') {
+                    console.error(`[WS][usages] Erro recebido: ${data.message}`);
+                }
+            } catch (e) {
+                console.error('[WS][usages] Falha ao processar mensagem', e);
+            }
+        };
+
+        socket.onclose = () => {
+            console.log('[WS][usages] Conexão perdida.');
+            setNodeOffline(true);
+        };
+
+        socket.onerror = (err) => {
+            console.error('[WS][usages] Erro na conexão.', err);
+            setNodeOffline(true);
+        };
+
+        return () => {
+            if (usageWs.current === socket) {
+                try { socket.close(); } catch {}
+            }
+        };
+    }, [server?.id, server?.nodeip, server?.nodePort, user?.id, formatUptime]);
 
     // Função de refresh reutilizando a mesma lógica do fetchBaseData (sem reiniciar polling se já iniciado)
     const refreshServer = useCallback(async () => {
-        if (!uuid) return;
+        if (!uuid) return null;
         setIsLoading(true);
         try {
             const response = await axios.post('/api/client/servers/uuid', { uuid });
             const data = response.data;
-            setServer(prev => {
-                const base = prev && prev.id === data.id ? prev : {
-                    dockerImage: data.dockerImage,
-                    id: data.id,
-                    environment: data.environment,
-                    core: data.core,
-                    name: data.name,
-                    ip: `${data.primaryAllocation?.externalIp || 'N/A'}:${data.primaryAllocation?.port || 'N/A'}`,
-                    status: 'stopped',
-                    cpu: 0,
-                    maxCpu: data.cpu || 100,
-                    ram: { used: 0, total: data.ram || 0, unit: 'MiB' },
-                    disk: { used: 0, total: data.disk || 0, unit: 'MiB' },
-                    uptime: '0s'
-                } as ServerData;
-
-                let merged: ServerData = {
-                    ...base,
-                    environment: data.environment,
-                    dockerImage: data.dockerImage,
-                    core: data.core,
-                    name: data.name,
-                    ip: `${data.primaryAllocation?.externalIp || 'N/A'}:${data.primaryAllocation?.port || 'N/A'}`,
-                    maxCpu: data.cpu || base.maxCpu,
-                    ram: { ...base.ram, total: data.ram || base.ram.total },
-                    disk: { ...base.disk, total: data.disk || base.disk.total },
-                    nodeip: data.nodeip || 'N/A',
-                    nodePort: data.nodePort || 0,
-                    nodeSftp: data.nodeSftp || 0,
-                    description: data.description || '',
-                    databasesQuantity: data.databasesQuantity || 0,
-                    databases: Array.isArray(data.databases) ? data.databases : [],
-                    addicionalAllocationsNumbers: data.addicionalAllocationsNumbers || 0,
-                    additionalAllocation: data.additionalAllocation,
-                    primaryAllocation: data.primaryAllocation
-                };
-                return merged;
-            });
+            // preserva campos dinâmicos do server atual
+            const prev = server;
+            const merged: ServerData = {
+                dockerImage: data.dockerImage,
+                id: data.id,
+                environment: data.environment,
+                core: data.core,
+                name: data.name,
+                ip: `${data.primaryAllocation?.externalIp || 'N/A'}:${data.primaryAllocation?.port || 'N/A'}`,
+                status: prev?.status || 'stopped',
+                cpu: prev?.cpu || 0,
+                networkIn: prev?.networkIn || 0,
+                networkOut: prev?.networkOut || 0,
+                maxCpu: data.cpu || prev?.maxCpu || 100,
+                ram: {
+                    used: prev?.ram.used || 0,
+                    total: data.ram || prev?.ram.total || 0,
+                    unit: prev?.ram.unit || 'MiB'
+                },
+                disk: {
+                    used: prev?.disk.used || 0,
+                    total: data.disk || prev?.disk.total || 0,
+                    unit: prev?.disk.unit || 'MiB'
+                },
+                uptime: prev?.uptime || '0s',
+                startedAt: prev?.startedAt,
+                nodeip: data.nodeip || prev?.nodeip || 'N/A',
+                nodePort: data.nodePort || prev?.nodePort || 0,
+                nodeSftp: data.nodeSftp || prev?.nodeSftp || 0,
+                description: data.description || prev?.description || '',
+                databasesQuantity: data.databasesQuantity || prev?.databasesQuantity || 0,
+                databases: Array.isArray(data.databases) ? data.databases : (prev?.databases || []),
+                addicionalAllocationsNumbers: data.addicionalAllocationsNumbers || prev?.addicionalAllocationsNumbers || 0,
+                additionalAllocation: data.additionalAllocation,
+                primaryAllocation: data.primaryAllocation
+            };
+            setServer(merged);
+            return merged;
         } catch (e) {
             setLogs(l => [...l, { time: new Date().toLocaleTimeString(), type: 'ERROR', msg: 'Falha ao atualizar dados do servidor.' }]);
+            return null;
         } finally {
             setIsLoading(false);
         }
-    }, [uuid]);
+    }, [uuid, server, setLogs]);
 
     const addLog = useCallback((newLog: Omit<LogEntry, 'time'>) => {
         setLogs(prevLogs => [...prevLogs.slice(-200), { ...newLog, time: new Date().toLocaleTimeString() }]);
@@ -383,7 +432,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
         const socket = new WebSocket(wsUrl);
         ws.current = socket;
 
-        socket.onopen = () => addLog({ type: 'INFO', msg: '\x1b[36;1m[Ender Panel] \x1B[0mConexão com a node estabelecida.' });
+        socket.onopen = () => addLog({ type: 'INFO', msg: '\x1b[38;2;148;2;247m[Ender Panel] \x1B[0mConexão com a node estabelecida.' });
 
         socket.onmessage = (event) => {
             try {
@@ -439,7 +488,6 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
-        addLog({ type: 'CMD', msg: `> ${command}` });
         ws.current.send(JSON.stringify({ type: 'command', command }));
 
     }, [addLog, isSendingCommand]);

@@ -1,13 +1,14 @@
 // app/components/server/pages/ConsolePage.tsx
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect, useLayoutEffect} from 'react';
 import { Panel } from '../../ui/Panel';
 import { useServer } from '../context/ServerContext';
 import { AnsiUp } from 'ansi_up';
 
 export const ConsolePage = () => {
-    const { logs, sendCommand, isSendingCommand, nodeOffline } = useServer();
+    const { logs, sendCommand, isSendingCommand, nodeOffline, server } = useServer();
     const [input, setInput] = useState('');
+    const [logsHere, setLogsHere] = useState<any>([])
     const scrollRef = useRef<HTMLDivElement>(null);
     const ansiUpRef = useRef<AnsiUp | null>(null);
 
@@ -21,9 +22,18 @@ export const ConsolePage = () => {
         }
     }
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    useLayoutEffect(() => {
+        if(!scrollRef.current) return
+        const scrollEl = scrollRef.current;
+        const distanceFromBottom = scrollEl.scrollHeight - scrollEl.clientHeight - scrollEl.scrollTop;
+        const isScrolledToBottom = distanceFromBottom <= 2.5;
+        setLogsHere(logs)
+        if(isScrolledToBottom) {
+            requestAnimationFrame(() => {
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                }
+            });
         }
     }, [logs]);
 
@@ -36,32 +46,28 @@ export const ConsolePage = () => {
 
     const cleanControl = (msg: string) => {
         if(!msg) return '';
-        // Remove controles exceto ESC para preservar ANSI
         return msg.replace(/[\u0000-\u0008\u000B-\u001A\u001C-\u001F\u007F]/g, '');
     };
 
     const injectMissingEsc = (text: string) => {
-        // Adiciona ESC em sequências SGR que não possuem ESC (ex: [0;33m, [1m, [m, [K)
         return text.replace(/(^|[^\x1b])((\[(?:[0-9]{1,3}(?:;[0-9]{1,3})*)?m)|\[K)/g, (full, pre, seq) => {
             return pre + '\x1b' + seq;
         });
     };
 
     const stripEraseLine = (text: string) => {
-        // Remove sequências de apagar linha (ESC[K) que só poluem a visualização
         return text.replace(/\x1b\[K/g, '');
     };
 
     const mcColorToAnsi = (text: string) => {
-        // Converte códigos § do Minecraft para ANSI SGR
         const map: Record<string,string> = {
             '0':'30','1':'34','2':'32','3':'36','4':'31','5':'35','6':'33','7':'37','8':'90','9':'94',
             'a':'92','b':'96','c':'91','d':'95','e':'93','f':'97',
-            'l':'1','n':'4','o':'3','m':'9','r':'0' // estilos
+            'l':'1','n':'4','o':'3','m':'9','r':'0'
         };
         return text.replace(/§([0-9a-fk-or])/gi, (_, codeRaw) => {
             const code = codeRaw.toLowerCase();
-            if(code === 'k') return ''; // obfuscation ignorado
+            if(code === 'k') return '';
             const sgr = map[code];
             if(!sgr) return '';
             return `\x1b[${sgr}m`;
@@ -69,7 +75,6 @@ export const ConsolePage = () => {
     };
 
     const stripLeadingMinecraftPrompt = (text: string) => {
-        // Para cada linha, remove somente o prefixo composto de '>' e '.' (ex: >...., >>>, >..) no início
         return text.split('\n').map(l => l.replace(/^\s*>[>.]*/, '')).join('\n');
     };
 
@@ -78,12 +83,15 @@ export const ConsolePage = () => {
         t = injectMissingEsc(t);
         t = mcColorToAnsi(t);
         t = stripEraseLine(t);
-        t = stripLeadingMinecraftPrompt(t); // substitui o antigo removePromptArtifacts
+        t = stripLeadingMinecraftPrompt(t);
         return t;
     };
 
+    // Altura dinâmica baseada no status do servidor para alinhar com ServerStats
+    const consoleHeightClass = server?.status === 'stopped' ? 'h-[500px]' : 'h-[765px]';
+
     return (
-        <Panel className="h-[564px] flex flex-col font-mono text-sm p-4 relative">
+        <Panel className={`${consoleHeightClass} flex flex-col font-mono text-sm p-4 relative`}>
             {nodeOffline && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm">
                     <div className="w-24 h-24 border-4 border-amber-400/30 border-t-amber-400 rounded-full animate-spin"></div>
@@ -92,7 +100,7 @@ export const ConsolePage = () => {
                 </div>
             )}
             <div ref={scrollRef} className="flex-grow overflow-y-auto pr-2 custom-scrollbar opacity-100">
-                {logs.map((log: any, i: any) => {
+                {logsHere.map((log: any, i: any) => {
                     const normalized = normalizeAnsi(log.msg || '');
                     const html = ansiUpRef.current ? ansiUpRef.current.ansi_to_html(normalized) : normalized.replace(/\x1b\[[0-9;]*m/g, '');
                     return (
@@ -101,7 +109,7 @@ export const ConsolePage = () => {
                 })}
             </div>
             <div className="flex items-center pt-4 mt-2">
-                <span className="text-teal-400 mr-2 font-semibold">{'>'}</span>
+                <span className="text-teal-400 mr-2 font-semibold">{' > '}</span>
                 <input
                     type="text"
                     value={input}

@@ -1,8 +1,19 @@
-// app/components/server/ui/Panel.tsx
+// app/components/ui/Panel.tsx
 import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-export const Panel = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-    <div className={`bg-zinc-900/40 backdrop-blur-2xl rounded-2xl ${className}`}>
+interface PanelProps {
+    children: React.ReactNode;
+    className?: string;
+}
+
+export const Panel = ({ children, className }: PanelProps) => (
+    <div
+        className={twMerge(
+            'bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-[4px] transition-all duration-300',
+            className
+        )}
+    >
         {children}
     </div>
 );

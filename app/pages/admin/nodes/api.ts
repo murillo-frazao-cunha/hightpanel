@@ -67,7 +67,7 @@ export const saveNode = async (nodeData: Omit<Node, 'id' | 'status' | 'allocatio
     const url = isEditing ? '/edit' : '/create';
 
     try {
-        const { data } = await api.post<Node>(url, nodeData);
+        const { data } = await api.post<Node>(url, nodeData); // nodeData inclui location se presente
         return data;
     } catch (error: any) {
         if (axios.isAxiosError(error) && error.response) {
@@ -140,6 +140,21 @@ export const deleteAllocation = async (allocationUuid: string): Promise<{ succes
     }
 };
 
+/**
+ * Atualiza uma alocação existente.
+ */
+export const updateAllocation = async (allocationUuid: string, externalIp: string | null): Promise<Allocation> => {
+    try {
+        const { data } = await api.post<Allocation>('/update-allocation', { uuid: allocationUuid, externalIp });
+        return data;
+    } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response) {
+            const msg = error.response.data?.error || 'Falha ao atualizar alocação.';
+            throw new Error(msg);
+        }
+        throw error;
+    }
+};
+
 // Mock temporário para evitar que a UI quebre enquanto a API não está 100%
 const mockNodes: Node[] = [];
-

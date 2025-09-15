@@ -5,7 +5,6 @@ import { Panel } from '../../ui/Panel';
 import { useServer } from '../context/ServerContext'; // Importar o hook
 
 const InfoCard = ({ title, value, total, unit, icon, statusColor, isHighUsage = false }: any) => (
-    // ... (código do InfoCard inalterado) ...
     <Panel className="p-5">
         <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3 text-zinc-400">
@@ -17,6 +16,7 @@ const InfoCard = ({ title, value, total, unit, icon, statusColor, isHighUsage = 
         <div className="flex items-baseline">
             <p className={`text-3xl font-semibold transition-colors duration-300 ${isHighUsage ? 'text-rose-400' : 'text-white'}`}>{value}</p>
             {total && <p className="text-zinc-400 font-normal ml-1"> / {total}{unit}</p>}
+            {!total && unit && <p className="text-zinc-400 font-normal ml-1">{unit}</p>}
         </div>
     </Panel>
 );
@@ -63,13 +63,21 @@ export const ServerStats = () => {
 
     return (
         <>
-            <InfoCard title="Status" value={currentStatus.text} icon={<Icon name="power" className="w-5 h-5"/>} statusColor={currentStatus.color} />
-            {server.status !== 'stopped' && (
-                <InfoCard title="Uptime" value={server.uptime} icon={<Icon name="servers" className="w-5 h-5"/>} />
-            )}
+            <InfoCard 
+                title="Status"
+                value={server.status === 'running' ? server.uptime : currentStatus.text}
+                icon={<Icon name="power" className="w-5 h-5"/>}
+                statusColor={currentStatus.color} 
+            />
             <InfoCard title="Uso de CPU" value={`${cpuUsagePercent.toFixed(2)}`} unit="%" total={`${server.maxCpu}`} icon={<Icon name="cpu" className="w-5 h-5"/>} isHighUsage={isCpuHigh} />
             <InfoCard title="Uso de RAM" value={server.ram.used.toFixed(2)} total={server.ram.total.toFixed(2)} unit={` ${server.ram.unit}`} icon={<Icon name="ram" className="w-5 h-5"/>} isHighUsage={isRamHigh} />
             <InfoCard title="Uso de Disco" value={server.disk.used.toFixed(2)} total={server.disk.total.toFixed(2)} unit={` ${server.disk.unit}`} icon={<Icon name="disk" className="w-5 h-5"/>} />
+            {server.status !== 'stopped' && (
+                <>
+                    <InfoCard title="Network In" value={server.networkIn.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowDown" className="w-5 h-5" />} />
+                    <InfoCard title="Network Out" value={server.networkOut.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowUp" className="w-5 h-5" />} />
+                </>
+            )}
         </>
     );
 };

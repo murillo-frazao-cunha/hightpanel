@@ -1,6 +1,6 @@
 // app/components/server/pages/SettingsPage.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Panel } from '../../ui/Panel';
 import { Icon } from '../../ui/Icon';
 import { useServer } from '../context/ServerContext';
@@ -9,10 +9,10 @@ import {useUser} from "@/app/contexts/UserContext"; // Importando a função da 
 
 // Helper para um painel genérico, para evitar repetição
 const InfoPanel = ({ title, children, className = '' }: { title: string, children: React.ReactNode, className?: string }) => (
-    <div className={`bg-zinc-900/50 p-5 rounded-lg border border-zinc-800 ${className}`}>
+    <Panel className={`bg-zinc-900/50 p-5 border border-zinc-800 ${className}`}>
         <h3 className="text-sm uppercase text-zinc-400 font-semibold tracking-wider mb-4">{title}</h3>
         {children}
-    </div>
+    </Panel>
 );
 
 // Helper para um input de texto
@@ -27,8 +27,15 @@ const FormInput = ({ label, ...props }: { label: string } & React.InputHTMLAttri
 );
 
 export const SettingsPage: React.FC = () => {
-    const { server, isLoading, refreshServer } = useServer();
-    const {user} = useUser()
+    const { server: ctxServer, isLoading: ctxLoading, refreshServer } = useServer();
+    const {user} = useUser();
+
+    // Congela server
+    const serverRef = useRef(ctxServer);
+    if(!serverRef.current && ctxServer) serverRef.current = ctxServer;
+    const server = serverRef.current;
+    const isLoading = ctxLoading && !server;
+
     // Estados para o formulário de edição
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -36,25 +43,29 @@ export const SettingsPage: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Efeito para inicializar o formulário com os dados do servidor
+    // Inicializa formulário apenas primeira vez que o server aparece
     useEffect(() => {
         if (server) {
             setName(server.name || '');
             setDescription(server.description || '');
         }
-    }, [server?.id]); // Roda apenas quando o servidor (ID) muda
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [server?.id]);
 
     const handleSaveDetails = async () => {
         if (!server?.id || isSubmitting) return;
-
         setIsSubmitting(true);
         setSuccessMessage(null);
         setErrorMessage(null);
-
         try {
             await editName(server.id, name, description);
             setSuccessMessage('Detalhes do servidor salvos com sucesso!');
-            await refreshServer()
+            await refreshServer();
+            // Sincroniza manualmente com potencial novo nome/descrição do ctxServer
+            if(serverRef.current && ctxServer){
+                serverRef.current.name = name;
+                serverRef.current.description = description;
+            }
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (error: any) {
             setErrorMessage(error.message || 'Falha ao salvar os detalhes.');
@@ -64,11 +75,11 @@ export const SettingsPage: React.FC = () => {
     };
 
     const sftpAddress = `sftp://${server?.nodeip}:${server?.nodeSftp}`;
+    const sftpUsername = user?.username && server?.id ? user.username + '_' + server.id.split('-')[0] : '';
 
-    const sftpUsername = user?.username && server?.id ? user.username + "_" + server.id.split("-")[0] : '';
     const handleLaunchSftp = () => {
         window.open(sftpAddress);
-    }
+    };
 
     if (isLoading || !server) {
         return <Panel className="p-6 text-center text-zinc-400">Carregando configurações...</Panel>;

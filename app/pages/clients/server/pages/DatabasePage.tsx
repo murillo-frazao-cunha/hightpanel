@@ -1,6 +1,6 @@
 // app/components/server/pages/DatabasesPage.tsx
 'use client';
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Panel } from '../../ui/Panel';
 import { Icon } from '../../ui/Icon';
@@ -132,12 +132,20 @@ const ViewDatabaseModal = ({ db, onClose }: { db: ServerDatabase | null, onClose
 // --- Main Component ---
 
 export const DatabasesPage: React.FC = () => {
-    const { server, isLoading, refreshServer } = useServer();
+    const { server: ctxServer, isLoading: ctxLoading, refreshServer } = useServer();
+
+    // Congela o server apenas na primeira atribuição
+    const serverRef = useRef(ctxServer);
+    if (!serverRef.current && ctxServer) {
+        serverRef.current = ctxServer;
+    }
+    const server = serverRef.current;
+    const isLoading = ctxLoading && !server;
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [viewingDb, setViewingDb] = useState<any | null>(null);
-    // Estado para controlar o modal de confirmação de exclusão
     const [dbToDelete, setDbToDelete] = useState<any | null>(null);
 
     const handleCreateDatabase = async (name: string) => {
@@ -145,9 +153,22 @@ export const DatabasesPage: React.FC = () => {
         setIsSubmitting(true);
         setErrorMessage(null);
         try {
-            await createServerDatabase(server.id, name);
-            await refreshServer();
-            setIsCreateModalOpen(false);
+            const result = await createServerDatabase(server.id, name);
+            // Atualiza localmente já que o server é congelado
+            if (result.success) {
+                if (!server.databases) server.databases = [] as any;
+                if (result.database) {
+                    // evita duplicados
+                    if (!server.databases.find((d: any) => d.name === result.database?.name)) {
+                        // @ts-ignore
+                        server.databases.push(result.database);
+                    }
+                } else {
+                    // fallback: força refresh mas manteremos server congelado (não refletirá a mudança se vier diferente)
+                    await refreshServer();
+                }
+                setIsCreateModalOpen(false);
+            }
         } catch (error: any) {
             setErrorMessage(error.message || 'Falha ao criar banco de dados.');
         } finally {
@@ -157,12 +178,14 @@ export const DatabasesPage: React.FC = () => {
 
     const handleDeleteDatabase = async () => {
         if (!server?.id || !dbToDelete) return;
-
         setIsSubmitting(true);
         setErrorMessage(null);
         try {
-            await deleteServerDatabase(server.id, dbToDelete.name);
-            await refreshServer();
+            const targetName = dbToDelete.name;
+            await deleteServerDatabase(server.id, targetName);
+            if (server.databases) {
+                server.databases = server.databases.filter((d: any) => d.name !== targetName);
+            }
         } catch (error: any) {
             setErrorMessage(error.message || 'Falha ao apagar o banco de dados.');
         } finally {
@@ -198,7 +221,7 @@ export const DatabasesPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="bg-zinc-900/50 p-4 rounded-lg flex justify-between items-center">
+                <Panel className="bg-zinc-900/50 p-4 flex justify-between items-center">
                     <p className="text-sm text-zinc-300">
                         Você está usando <span className="font-bold text-white">{databases.length}</span> de <span className="font-bold text-white">{dbLimit}</span> bancos de dados disponíveis.
                     </p>
@@ -206,11 +229,11 @@ export const DatabasesPage: React.FC = () => {
                         <Icon name="plus" className="w-4 h-4" />
                         Novo Banco de Dados
                     </button>
-                </div>
+                </Panel>
 
                 <div className="space-y-3">
                     {databases.length > 0 ? databases.map(db => (
-                        <div key={db.id} className="bg-zinc-900/60 p-4 rounded-lg flex items-center gap-4 text-sm">
+                        <Panel key={db.id} className="bg-zinc-900/60 p-4 flex items-center gap-4 text-sm">
                             <Icon name="database" className="w-6 h-6 text-zinc-400" />
                             <div className="flex-grow grid grid-cols-2 md:grid-cols-3 gap-4">
                                 <div>
@@ -239,7 +262,7 @@ export const DatabasesPage: React.FC = () => {
                                     <Icon name="trash" className="w-4 h-4" />
                                 </button>
                             </div>
-                        </div>
+                        </Panel>
                     )) : (
                         <div className="text-center py-10 border-2 border-dashed border-zinc-800 rounded-lg">
                             <Icon name="database" className="w-10 h-10 mx-auto text-zinc-600" />
@@ -253,4 +276,3 @@ export const DatabasesPage: React.FC = () => {
 };
 
 export default DatabasesPage;
-

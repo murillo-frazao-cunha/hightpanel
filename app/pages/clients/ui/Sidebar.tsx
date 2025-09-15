@@ -53,14 +53,13 @@ export const Sidebar = () => {
                             href={link.href}
                             title={!isExpanded ? link.label : ''}
                             className={`flex items-center py-3 rounded-lg transition-colors duration-200
-                                {/* ===== A CORREÇÃO ESTÁ AQUI ===== */}
                                 ${isExpanded ? 'px-4' : 'justify-center'}
                                 ${isActive
                                 ? 'bg-zinc-800/60 text-white font-semibold'
                                 : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-white'
                             }`}
                         >
-                            <Icon name={link.icon as any} className={`w-6 h-6 flex-shrink-0 ${isActive ? 'text-teal-400' : ''}`} />
+                            <Icon name={link.icon as any} className={`w-6 h-6 flex-shrink-0 ${isActive ? 'text-purple-700' : ''}`} />
                             <span className={`ml-4 transition-opacity whitespace-nowrap duration-200 ${!isExpanded && 'opacity-0 hidden'}`}>{link.label}</span>
                         </Link>
                     );
@@ -87,7 +86,7 @@ export const Sidebar = () => {
 
             <div className="p-4 mt-auto border-t border-zinc-800/50">
                 <div className={`flex items-center p-2 ${!isExpanded && 'justify-center'}`}>
-                    <img src={`https://placehold.co/40x40/14b8a6/0a0a0a?text=${user?.username?.charAt(0).toUpperCase() || 'U'}`} alt="Avatar" className="rounded-full flex-shrink-0" />
+                    <img src={`https://placehold.co/40x40/8200db/0a0a0a?text=${user?.username?.charAt(0).toUpperCase() || 'U'}`} alt="Avatar" className="rounded-full flex-shrink-0" />
                     <div className={`ml-3 overflow-hidden transition-opacity duration-200 ${!isExpanded && 'opacity-0 hidden'}`}>
                         <p className="font-semibold text-white text-sm whitespace-nowrap">{user?.username || 'Usuário'}</p>
                         <p className="text-zinc-400 text-xs whitespace-nowrap">{user?.email || ''}</p>

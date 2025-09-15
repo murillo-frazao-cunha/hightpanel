@@ -30,8 +30,8 @@ export class Nodes {
                     token: process.env.TOKEN,
                     ...data
                 },
-                timeout: 10000, // 5 seconds timeout
-                maxContentLength: 60 * 1024 * 1024,
+                timeout: 500000, // 5 seconds timeout
+                maxContentLength: 60 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
                 maxBodyLength: 60 * 1024 * 1024
             });
             return response.data;
@@ -76,12 +76,13 @@ export class Nodes {
      * Updates the properties of this node in the database.
      * @param data - The new data for the node.
      */
-    async update(data: { name: string, ip: string, port: number, sftp: number, ssl: boolean }): Promise<void> {
+    async update(data: { name: string, ip: string, port: number, sftp: number, ssl: boolean, location?: string }): Promise<void> {
         this.node.name = data.name;
         this.node.ip = data.ip;
         this.node.port = data.port;
         this.node.sftp = data.sftp;
         this.node.ssl = data.ssl;
+        if (data.location !== undefined) this.node.location = data.location;
         await this.node.save();
     }
 
@@ -98,7 +99,8 @@ export class Nodes {
     toJSON() {
         return {
             uuid: this.node.id,
-            ...this.node.toJSON()
+            ...this.node.toJSON(),
+            location: this.node.location || null
         };
     }
 
@@ -136,7 +138,7 @@ export class Nodes {
      * @param data - The data for the new node.
      * @returns {Promise<Nodes>} An instance of the newly created node.
      */
-    static async createNode(data: { name: string, ip: string, port: number, sftp: number, ssl: boolean }): Promise<Nodes> {
+    static async createNode(data: { name: string, ip: string, port: number, sftp: number, ssl: boolean, location?: string }): Promise<Nodes> {
         const tables = await getTables();
         const newUuid = crypto.randomUUID();
         const newNodeModel = await tables.nodeTable.insert(newUuid, data);

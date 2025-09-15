@@ -38,6 +38,7 @@ export async function interpretNodes(request: NextRequest, params: { [key: strin
         case "get-allocations": return GetAllocations(request);
         case "add-allocations": return AddAllocations(request);
         case "delete-allocation": return DeleteAllocation(request);
+        case "update-allocation": return UpdateAllocation(request); // nova rota
         default:
             return GetAllNodes();
     }
@@ -96,7 +97,7 @@ export async function CreateNode(request: NextRequest) {
         return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     }
     try {
-        const { name, ip, port, sftp, ssl } = await request.json();
+        const { name, ip, port, sftp, ssl, location } = await request.json();
         if (!name || !ip || !port || !sftp || ssl === undefined) {
             return NextResponse.json({ error: 'Parâmetros ausentes' }, { status: 400 });
         }
@@ -104,7 +105,7 @@ export async function CreateNode(request: NextRequest) {
         if (existingNode) {
             return NextResponse.json({ error: 'Já existe uma node com esse nome' }, { status: 400 });
         }
-        const newNode = await Nodes.createNode({ name, ip, port, sftp, ssl });
+        const newNode = await Nodes.createNode({ name, ip, port, sftp, ssl, location });
         return NextResponse.json(newNode.toJSON(), { status: 201 });
     } catch (error) {
         console.error('API Error:', error);
@@ -117,7 +118,7 @@ export async function EditNode(request: NextRequest) {
         return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     }
     try {
-        const { uuid, name, ip, port, sftp, ssl } = await request.json();
+        const { uuid, name, ip, port, sftp, ssl, location } = await request.json();
         if (!uuid || !name || !ip || !port || !sftp || ssl === undefined) {
             return NextResponse.json({ error: 'Parâmetros ausentes' }, { status: 400 });
         }
@@ -127,7 +128,7 @@ export async function EditNode(request: NextRequest) {
         if (nodeWithName && nodeWithName.node.id !== uuid) {
             return NextResponse.json({ error: 'Já existe uma node com esse nome' }, { status: 400 });
         }
-        await nodeInstance.update({ name, ip, port, sftp, ssl });
+        await nodeInstance.update({ name, ip, port, sftp, ssl, location });
         return NextResponse.json(nodeInstance.toJSON());
     } catch (error) {
         console.error('API Error:', error);
@@ -147,7 +148,7 @@ export async function DeleteNode(request: NextRequest) {
 
         // verificar se tem serviodres
         const table = await getTables();
-        const servers = await table.serverTable.findByParam('node', uuid);
+        const servers = await table.serverTable.findByParam('nodeUuid', uuid);
         if (servers.length > 0) {
             return NextResponse.json({ error: 'Não é possível deletar um node que possui servidores ativos.' }, { status: 400 });
         }
@@ -172,9 +173,12 @@ export async function GetAllocations(request: NextRequest) {
         if (!uuid) return NextResponse.json({ error: 'UUID do node ausente' }, { status: 400 });
 
         const { allocationTable } = await getTables();
-        // Usando findByParam conforme definido na classe RedisTable
         const allocations = await allocationTable.findByParam('nodeId', uuid);
-        return NextResponse.json(allocations.map(a => a.toJSON()));
+        const result = allocations.map(a => {
+            const json: any = a.toJSON();
+            return { ...json, assignedToServerId: json.assignedTo ?? null };
+        });
+        return NextResponse.json(result);
     } catch (error) {
         return NextResponse.json({ error: 'Erro ao buscar alocações' }, { status: 500 });
     }
@@ -200,25 +204,24 @@ export async function AddAllocations(request: NextRequest) {
         }
 
         const { allocationTable } = await getTables();
-        const createdAllocations = [];
+        const createdAllocations: any[] = [];
 
         for (let port = startPort; port <= endPort; port++) {
-            // Usando findByParam para verificar se a porta já existe neste node
             const existingAllocations = await allocationTable.findByParam('nodeId', uuid);
             const existingPort = existingAllocations.find(alloc => alloc.port === port);
             if (existingPort) {
                 console.log(`Porta ${port} já alocada para este node. Pulando.`);
                 continue;
             }
-
-            // Usando o método 'insert' da RedisTable, que requer um ID.
             const newAlloc = await allocationTable.insert(randomUUID(), {
                 nodeId: uuid,
                 ip: ip,
                 externalIp: externalIp || null,
                 port: port,
+                assignedTo: null
             });
-            createdAllocations.push(newAlloc.toJSON());
+            const json: any = newAlloc.toJSON();
+            createdAllocations.push({ ...json, assignedToServerId: json.assignedTo ?? null });
         }
 
         return NextResponse.json(createdAllocations, { status: 201 });
@@ -254,3 +257,23 @@ export async function DeleteAllocation(request: NextRequest) {
     }
 }
 
+/**
+ * Atualiza uma alocação existente.
+ */
+export async function UpdateAllocation(request: NextRequest) {
+    try {
+        if (request.method !== 'POST') return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+        const { uuid, externalIp } = await request.json();
+        if (!uuid) return NextResponse.json({ error: 'UUID da alocação ausente' }, { status: 400 });
+        const { allocationTable } = await getTables();
+        const allocation = await allocationTable.get(uuid);
+        if (!allocation) return NextResponse.json({ error: 'Alocação não encontrada' }, { status: 404 });
+        allocation.externalIp = (externalIp && externalIp.trim() !== '') ? externalIp : null;
+        await allocation.save();
+        const json: any = allocation.toJSON();
+        return NextResponse.json({ ...json, assignedToServerId: json.assignedTo ?? null });
+    } catch (error) {
+        console.error('API Error UpdateAllocation:', error);
+        return NextResponse.json({ error: 'Erro ao atualizar alocação' }, { status: 500 });
+    }
+}

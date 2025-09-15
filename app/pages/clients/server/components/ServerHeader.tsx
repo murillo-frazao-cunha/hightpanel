@@ -1,86 +1,53 @@
-// app/components/server/ui/Header.tsx
 import React, { useState, useMemo } from 'react';
-import { Icon } from '../../ui/Icon';
-import { sendServerAction } from '../api';
-import { useServer } from '../context/ServerContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Icon } from '../../ui/Icon'; // Ajuste o caminho conforme sua estrutura
+import { useServer } from '../context/ServerContext'; // Ajuste o caminho conforme sua estrutura
+import { sendServerAction } from '../api'; // Ajuste o caminho conforme sua estrutura
 
-const HeaderActionButtons = () => {
-    const { server, nodeOffline } = useServer();
-    const [loading, setLoading] = useState<string | null>(null);
 
-    const disabledMap = useMemo(() => {
-        if (!server) return { start: true, restart: true, stop: true, kill: true } as any;
-        const base = {
-            start: server.status !== 'stopped',
-            restart: server.status === 'stopped',
-            stop: server.status === 'stopped',
-            kill: !server || server.status === 'stopped'
-        } as any;
-        if (nodeOffline) return { start: true, restart: true, stop: true, kill: true };
-        return base;
-    }, [server, nodeOffline]);
-
-    const buttons: { label: string; icon: string; color: string; action: 'start' | 'restart' | 'stop' | 'kill'; disabled: boolean }[] = [
-        { label: 'Ligar', icon: 'play', color: 'text-green-400 hover:bg-green-500/20', action: 'start', disabled: disabledMap.start },
-        { label: 'Reiniciar', icon: 'refresh', color: 'text-sky-400 hover:bg-sky-500/20', action: 'restart', disabled: disabledMap.restart },
-        { label: 'Desligar', icon: 'power', color: 'text-amber-400 hover:bg-amber-500/20', action: 'stop', disabled: disabledMap.stop },
-        { label: 'Matar', icon: 'skull', color: 'text-rose-400 hover:bg-rose-500/20', action: 'kill', disabled: disabledMap.kill }
-    ];
-
-    const handleClick = async (action: 'start' | 'restart' | 'stop' | 'kill') => {
-        if (!server?.id || loading || nodeOffline) return;
-        try {
-            setLoading(action);
-            await sendServerAction({ uuid: server.id, action });
-        } catch (e) { console.error('Falha ao enviar ação:', e); }
-        finally { setLoading(null); }
-    };
-
-    return (
-        <div className="flex items-center gap-2">
-            {buttons.map(btn => {
-                const isCurrent = loading === btn.action;
-                return (
-                    <button
-                        key={btn.label}
-                        title={nodeOffline ? 'Node offline' : btn.label}
-                        disabled={btn.disabled || !server?.id || !!loading || nodeOffline}
-                        onClick={() => handleClick(btn.action)}
-                        className={`relative flex items-center justify-center p-3 rounded-lg bg-zinc-800/50 transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${btn.color}`}
-                    >
-                        {isCurrent && <span className="absolute inset-0 animate-pulse bg-zinc-900/30 rounded-lg" />}
-                        <Icon name={btn.icon} className="w-5 h-5" />
-                    </button>
-                );
-            })}
-        </div>
-    );
-}
 
 export const ServerHeader = () => {
     const { server, nodeOffline } = useServer();
-    const statusLabel = nodeOffline
-        ? 'Node Offline'
-        : server?.status === 'running' ? 'Rodando' : server?.status === 'initializing' ? 'Inicializando' : server?.status === 'stopped' ? 'Parado' : '...';
-    const badgeClass = nodeOffline
-        ? 'bg-amber-600/30 text-amber-300 animate-pulse'
-        : server?.status === 'running' ? 'bg-teal-600/30 text-teal-300' : server?.status === 'initializing' ? 'bg-amber-600/30 text-amber-300' : 'bg-rose-600/30 text-rose-300';
+
+    const statusMap = {
+        running: { label: 'Rodando', badgeClass: 'bg-teal-600/30 text-teal-300' },
+        initializing: { label: 'Inicializando', badgeClass: 'bg-amber-600/30 text-amber-300' },
+        stopped: { label: 'Parado', badgeClass: 'bg-rose-600/30 text-rose-300' },
+    };
+
+    const currentStatus = server ? statusMap[server.status] : null;
+
+    const statusLabel = nodeOffline ? 'Node Offline' : currentStatus?.label || '...';
+    const badgeClass = nodeOffline ? 'bg-amber-600/30 text-amber-300 animate-pulse' : currentStatus?.badgeClass || 'bg-zinc-600/30 text-zinc-300';
+
     return (
-        <div className="flex justify-between items-start mb-8">
+        <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="flex justify-between items-start mb-8"
+        >
             <div>
                 <h1 className="text-4xl font-bold text-white mb-1 flex items-center gap-3">
-                    {server?.name || '...'}
-                    {nodeOffline && <span className="flex items-center gap-1 text-amber-400 text-xs font-semibold uppercase tracking-wide">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                    </span>}
+                    {server?.name || <span className="w-48 h-10 bg-zinc-800 rounded-md animate-pulse" />}
+                    {nodeOffline && (
+                        <span className="w-3 h-3 rounded-full bg-amber-400 relative flex" title="Node Offline">
+                            <span className="w-3 h-3 rounded-full bg-amber-400 absolute animate-ping" />
+                        </span>
+                    )}
                 </h1>
-                <p className="text-zinc-400 font-mono flex items-center gap-2"><Icon name="globe" className="w-4 h-4" />{server?.ip || '...'}</p>
-                <div className="mt-2 inline-flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${badgeClass}`}>{statusLabel}</span>
-                    {!nodeOffline && server?.uptime && server.status === 'running' && <span className="text-xs text-zinc-500">tempo {server.uptime}</span>}
+                <p className="text-zinc-400 font-mono flex items-center gap-2">
+                    <Icon name="globe" className="w-4 h-4" />
+                    {server?.ip || <span className="w-32 h-5 bg-zinc-800 rounded-md animate-pulse" />}
+                </p>
+                <div className="mt-3 inline-flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${badgeClass}`}>{statusLabel}</span>
+                    {!nodeOffline && server?.uptime && server.status === 'running' && (
+                        <span className="text-xs text-zinc-500 font-mono">uptime {server.uptime}</span>
+                    )}
                 </div>
             </div>
-            <HeaderActionButtons />
-        </div>
+
+        </motion.div>
     );
 };

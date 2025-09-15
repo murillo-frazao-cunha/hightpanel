@@ -5,10 +5,11 @@ export interface Allocation {
     externalIp: string | null;
     port: number;
     nodeId: string;
+    assignedToServerId?: string | null; // novo campo
     // Futuramente: assignedToServerId: string | null;
 }
 
-// Atualiza a interface do Node para incluir as alocações
+// Atualiza a interface do Node para incluir as alocações e localização
 export interface Node {
     uuid: string;
     id: number;
@@ -18,5 +19,6 @@ export interface Node {
     sftp: number;
     ssl: boolean;
     status: 'online' | 'offline';
+    location?: string | null; // nova propriedade
     allocations?: Allocation[]; // Lista de alocações (opcional)
 }

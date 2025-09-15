@@ -3,8 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Icon } from '@/app/pages/clients/ui/Icon';
 import type { Node, Allocation } from '../types/NodeType';
 import Link from 'next/link';
-import { addAllocations, getAllocations, deleteAllocation } from '../api'; // api helpers
+import { addAllocations, getAllocations, deleteAllocation, deleteNode } from '../api'; // api helpers
 import { useToast } from '@/app/contexts/ToastContext';
+import AllocationRow from './AllocationRow';
+import { useRouter } from 'next/navigation';
+import { ConfirmModal } from '@/app/pages/clients/ui/ModalConfirm';
 
 interface NodeFormPageProps {
     node?: Node | null;
@@ -20,12 +23,16 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
     const [activeTab, setActiveTab] = useState<'settings' | 'allocations'>('settings');
     const isEditing = !!node;
     const { addToast } = useToast();
+    const router = useRouter();
 
     // State for Allocations
     const [allocations, setAllocations] = useState<Allocation[]>([]);
     const [isLoadingAllocations, setIsLoadingAllocations] = useState(true);
     const [newAllocation, setNewAllocation] = useState({ externalIp: '', ports: '', ip: '' });
     const [isSubmittingAllocations, setIsSubmittingAllocations] = useState(false);
+
+    // State for Delete Modal
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         if (isEditing && node) {
@@ -45,6 +52,7 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                 port: 8080,
                 sftp: 2022,
                 ssl: false,
+                location: '' // inicializa location
             });
         }
     }, [node, isEditing]);
@@ -107,6 +115,21 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
         }
     };
 
+    const handleRequestDelete = () => setIsDeleteModalOpen(true);
+
+    const handleConfirmDelete = async () => {
+        if (!node) return;
+        try {
+            await deleteNode(node.uuid);
+            addToast('Node deletado com sucesso!', 'success');
+            router.push('/admin/nodes');
+        } catch (e:any) {
+            addToast(e.message || 'Falha ao deletar node.', 'error');
+        } finally {
+            setIsDeleteModalOpen(false);
+        }
+    };
+
     // @ts-ignore
     const panelToken = node?.token
     console.log(panelToken)
@@ -128,6 +151,14 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                     <h1 className="text-4xl font-bold text-white">{isEditing ? 'Editando Node' : 'Criar Novo Node'}</h1>
                     <p className="text-zinc-400 mt-1">{isEditing ? `Modificando "${formData.name}"` : 'Preencha os detalhes para configurar um novo node.'}</p>
                 </div>
+                {isEditing && (
+                    <div className="flex gap-3">
+                        <button onClick={handleRequestDelete} className="px-4 py-2.5 rounded-lg bg-rose-600/90 text-white text-sm font-semibold hover:bg-rose-600 transition-colors flex items-center gap-2">
+                            <Icon name="trash" className="w-4 h-4" />
+                            Deletar Node
+                        </button>
+                    </div>
+                )}
             </header>
 
             {error && (
@@ -166,10 +197,17 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                                 <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Node-SP-01" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
                                 <p className="text-xs text-zinc-500 mt-1.5">Um nome amigável para o seu node. Ex: Node-SP-01</p>
                             </div>
-                            <div>
-                                <label htmlFor="ip" className="block text-sm font-medium text-zinc-400 mb-2">Endereço IP</label>
-                                <input id="ip" type="text" name="ip" value={formData.ip || ''} onChange={handleChange} placeholder="ex: 192.168.1.1" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
-                                <p className="text-xs text-zinc-500 mt-1.5">O endereço IPv4 público do seu node.</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label htmlFor="ip" className="block text-sm font-medium text-zinc-400 mb-2">Endereço IP</label>
+                                    <input id="ip" type="text" name="ip" value={formData.ip || ''} onChange={handleChange} placeholder="ex: 192.168.1.1" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <p className="text-xs text-zinc-500 mt-1.5">O endereço IPv4 público do seu node.</p>
+                                </div>
+                                <div>
+                                    <label htmlFor="location" className="block text-sm font-medium text-zinc-400 mb-2">Localização / Categoria</label>
+                                    <input id="location" type="text" name="location" value={formData.location || ''} onChange={handleChange} placeholder="ex: São Paulo / BR-SP" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <p className="text-xs text-zinc-500 mt-1.5">Usado para agrupar nodes por região ou propósito.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -261,14 +299,7 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                                 allocations.length > 0 ? (
                                     <div className="space-y-2">
                                         {allocations.map(alloc => (
-                                            <div key={alloc.id} className="flex items-center justify-between bg-zinc-800/50 p-3 rounded-md text-sm">
-                                                <div className="font-mono text-zinc-300">
-                                                    <span className="text-teal-400">{alloc.externalIp || alloc.ip}</span>
-                                                    <span className="text-zinc-500">:</span>
-                                                    <span className="text-amber-400">{alloc.port}</span>
-                                                </div>
-                                                <button onClick={() => handleDeleteAllocation(alloc.id)} className="p-1 text-zinc-500 hover:text-rose-400"><Icon name="trash" className="w-4 h-4" /></button>
-                                            </div>
+                                            <AllocationRow key={alloc.id} alloc={alloc} onDelete={handleDeleteAllocation} onUpdated={(updated) => setAllocations(prev => prev.map(a => a.id === updated.id ? updated : a))} />
                                         ))}
                                     </div>
                                 ) : <p className="text-zinc-500">Nenhuma alocação encontrada para este node.</p>
@@ -286,9 +317,19 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                     {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Node')}
                 </button>
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Exclusão"
+                message="Tem certeza que deseja deletar este node? Esta ação não pode ser desfeita."
+                icon="trash"
+                confirmText="Sim, Deletar"
+                confirmColor="rose"
+            />
         </>
     );
 };
 
 export default NodeFormPage;
-

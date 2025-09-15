@@ -11,6 +11,7 @@ export interface NodeData {
     sftp: number;
     ssl: boolean;
     status: 'online' | 'offline';
+    location?: string; // nova propriedade opcional para localização/categoria
 }
 
 
@@ -23,6 +24,7 @@ export class Node extends RedisEntity<string, NodeData> {
     declare sftp: number
     declare ssl: boolean
     declare status: 'online' | 'offline';
+    declare location?: string; // declarando no runtime/TS
 }
 
 // 3. Crie a classe da Tabela, estendendo RedisTable
@@ -40,6 +42,7 @@ export class NodeTable extends RedisTable<string, Node> {
             { name: 'sftp', type: DataType.LONG, indexed: false },
             { name: 'ssl', type: DataType.BOOLEAN, indexed: false },
             { name: 'status', type: DataType.STRING, indexed: false },
+            { name: 'location', type: DataType.STRING, indexed: true }, // novo campo indexado para futuras buscas por localização
         ];
     }
 }

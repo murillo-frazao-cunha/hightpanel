@@ -25,6 +25,8 @@ export interface ServerData {
 
     // quantidade de alocações adicionais que o user mesmo pode criar
     addicionalAllocationsNumbers: number;
+
+    group?: string;
 }
 
 
@@ -52,6 +54,7 @@ export class Servers extends RedisEntity<string, ServerData> {
     // quantidade de alocações adicionais que o user mesmo pode criar
     declare addicionalAllocationsNumbers: number;
 
+    declare group?: string;
 
     async getNode() {
         return Nodes.getNode(this.nodeUuid)
@@ -93,6 +96,8 @@ export class ServerTable extends RedisTable<string, Servers> {
             { name: 'databases', type: DataType.STRING, indexed: false },
 
             { name: 'addicionalAllocationsNumbers', type: DataType.LONG, indexed: false },
+
+            { name: 'group', type: DataType.STRING, indexed: true },
         ];
     }
 }

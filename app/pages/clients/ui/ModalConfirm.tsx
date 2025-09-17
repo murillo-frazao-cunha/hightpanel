@@ -12,7 +12,7 @@ interface ConfirmModalProps {
     icon?: string;
     confirmText?: string;
     cancelText?: string;
-    confirmColor?: 'rose' | 'teal' | 'amber';
+    confirmColor?: 'rose' | 'purple' | 'amber';
 }
 
 const colorSchemes = {
@@ -23,12 +23,12 @@ const colorSchemes = {
         iconText: 'text-rose-600',
         shadow: 'shadow-rose-500/50',
     },
-    teal: {
-        bg: 'bg-teal-500',
-        hoverBg: 'bg-teal-600',
-        iconBg: 'bg-teal-100',
-        iconText: 'text-teal-600',
-        shadow: 'shadow-teal-500/50',
+    purple: {
+        bg: 'bg-purple-600',
+        hoverBg: 'bg-purple-700',
+        iconBg: 'bg-purple-500/20',
+        iconText: 'text-purple-400',
+        shadow: 'shadow-purple-500/50',
     },
     amber: {
         bg: 'bg-amber-500',

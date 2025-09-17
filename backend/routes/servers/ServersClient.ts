@@ -113,7 +113,7 @@ async function EditName(currentUser: Profile, request: NextRequest) {
         return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     }
     try {
-        const { uuid, name, description } = await request.json();
+        const { uuid, name, description, group } = await request.json();
         if (!uuid || !name) {
             return NextResponse.json({ error: "O UUID e o nome do servidor são obrigatórios." }, { status: 400 });
         }
@@ -126,6 +126,7 @@ async function EditName(currentUser: Profile, request: NextRequest) {
         }
         server.name = name;
         if(description !== undefined && description !== null) server.description = description
+        if(group !== undefined && group !== null) server.group = group
         await server.save();
         return NextResponse.json({ success: true });
     } catch (error: any) {

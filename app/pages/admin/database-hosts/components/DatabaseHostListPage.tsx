@@ -19,7 +19,7 @@ const HostRow = ({ host, onDelete }: { host: DatabaseHost; onDelete: (uuid: stri
     <Link href={`/admin/database-hosts/edit/${host.id}`} className="block group">
       <div className="flex items-center bg-zinc-900/40 backdrop-blur-2xl rounded-lg p-4 transition-all duration-300 hover:bg-zinc-900/60 hover:ring-2 hover:ring-zinc-700/80">
         <div className="bg-zinc-800/50 p-3 rounded-lg">
-          <Icon name="database" className="w-6 h-6 text-teal-400" />
+          <Icon name="database" className="w-6 h-6 text-purple-400" />
         </div>
         <div className="ml-5 flex-grow min-w-0">
           <h3 className="text-lg font-bold text-white truncate">{host.name}</h3>
@@ -45,7 +45,7 @@ const DatabaseHostListPage: React.FC<DatabaseHostListPageProps> = ({ hosts, onDe
           <h1 className="text-4xl font-bold text-white">Hosts de Databases</h1>
           <p className="text-zinc-400 mt-1">Gerencie conexões MySQL utilizadas para provisionar databases.</p>
         </div>
-        <Link href="/admin/database-hosts/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50">
+        <Link href="/admin/database-hosts/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50">
           <Icon name="plus" className="w-5 h-5" />
           Novo Host
         </Link>
@@ -65,4 +65,3 @@ const DatabaseHostListPage: React.FC<DatabaseHostListPageProps> = ({ hosts, onDe
 };
 
 export default DatabaseHostListPage;
-

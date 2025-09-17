@@ -174,11 +174,11 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
             )}
 
             <div className="flex border-b border-zinc-700/50 mb-8">
-                <button onClick={() => setActiveTab('settings')} className={`px-4 py-3 text-sm font-semibold transition-colors ${activeTab === 'settings' ? 'text-white border-b-2 border-teal-500' : 'text-zinc-400 hover:text-white'}`}>
+                <button onClick={() => setActiveTab('settings')} className={`px-4 py-3 text-sm font-semibold transition-colors ${activeTab === 'settings' ? 'text-white border-b-2 border-purple-500' : 'text-zinc-400 hover:text-white'}`}>
                     Configurações
                 </button>
                 {isEditing && (
-                    <button onClick={() => setActiveTab('allocations')} className={`px-4 py-3 text-sm font-semibold transition-colors ${activeTab === 'allocations' ? 'text-white border-b-2 border-teal-500' : 'text-zinc-400 hover:text-white'}`}>
+                    <button onClick={() => setActiveTab('allocations')} className={`px-4 py-3 text-sm font-semibold transition-colors ${activeTab === 'allocations' ? 'text-white border-b-2 border-purple-500' : 'text-zinc-400 hover:text-white'}`}>
                         Alocações de IP
                     </button>
                 )}
@@ -194,18 +194,18 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                         <div className="p-6 space-y-6">
                             <div>
                                 <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">Nome do Node</label>
-                                <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Node-SP-01" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Node-SP-01" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 <p className="text-xs text-zinc-500 mt-1.5">Um nome amigável para o seu node. Ex: Node-SP-01</p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
                                     <label htmlFor="ip" className="block text-sm font-medium text-zinc-400 mb-2">Endereço IP</label>
-                                    <input id="ip" type="text" name="ip" value={formData.ip || ''} onChange={handleChange} placeholder="ex: 192.168.1.1" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input id="ip" type="text" name="ip" value={formData.ip || ''} onChange={handleChange} placeholder="ex: 192.168.1.1" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                     <p className="text-xs text-zinc-500 mt-1.5">O endereço IPv4 público do seu node.</p>
                                 </div>
                                 <div>
                                     <label htmlFor="location" className="block text-sm font-medium text-zinc-400 mb-2">Localização / Categoria</label>
-                                    <input id="location" type="text" name="location" value={formData.location || ''} onChange={handleChange} placeholder="ex: São Paulo / BR-SP" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input id="location" type="text" name="location" value={formData.location || ''} onChange={handleChange} placeholder="ex: São Paulo / BR-SP" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                     <p className="text-xs text-zinc-500 mt-1.5">Usado para agrupar nodes por região ou propósito.</p>
                                 </div>
                             </div>
@@ -220,11 +220,11 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label htmlFor="port" className="block text-sm font-medium text-zinc-400 mb-2">Porta</label>
-                                <input id="port" type="number" name="port" value={formData.port || ''} onChange={handleChange} placeholder="ex: 8080" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                <input id="port" type="number" name="port" value={formData.port || ''} onChange={handleChange} placeholder="ex: 8080" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                             </div>
                             <div>
                                 <label htmlFor="sftp" className="block text-sm font-medium text-zinc-400 mb-2">Porta SFTP</label>
-                                <input id="sftp" type="number" name="sftp" value={formData.sftp || ''} onChange={handleChange} placeholder="ex: 2022" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                <input id="sftp" type="number" name="sftp" value={formData.sftp || ''} onChange={handleChange} placeholder="ex: 2022" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                             </div>
                         </div>
                     </div>
@@ -237,7 +237,7 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                             </div>
                             <label htmlFor="ssl" className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="ssl" name="ssl" checked={formData.ssl || false} onChange={handleChange} className="sr-only peer" />
-                                <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:bg-teal-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
+                                <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500/50 peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
                             </label>
                         </div>
                     </div>
@@ -250,7 +250,7 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                             </div>
                             <div className="p-6">
                                 <div className="relative bg-black/50 rounded-lg">
-                                    <pre className="p-4 text-xs text-teal-300 whitespace-pre-wrap overflow-auto custom-scrollbar h-full max-h-40">{generateCommand()}</pre>
+                                    <pre className="p-4 text-xs text-purple-300 whitespace-pre-wrap overflow-auto custom-scrollbar h-full max-h-40">{generateCommand()}</pre>
                                     <button onClick={copyToClipboard} className="absolute top-2 right-2 p-2 bg-zinc-800/70 rounded-md hover:bg-zinc-700/70 transition-colors" title="Copiar Comando">
                                         {copied ? <Icon name="check" className="w-5 h-5 text-green-400" /> : <Icon name="copy" className="w-5 h-5 text-zinc-300" />}
                                     </button>
@@ -272,19 +272,19 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">IP de Alocação</label>
-                                    <input type="text" value={newAllocation.ip} onChange={e => setNewAllocation(p => ({...p, ip: e.target.value}))} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={newAllocation.ip} onChange={e => setNewAllocation(p => ({...p, ip: e.target.value}))} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">IP Externo (Opcional)</label>
-                                    <input type="text" value={newAllocation.externalIp} onChange={e => setNewAllocation(p => ({...p, externalIp: e.target.value}))} placeholder="node1.ender.me" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={newAllocation.externalIp} onChange={e => setNewAllocation(p => ({...p, externalIp: e.target.value}))} placeholder="node1.ender.me" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">Porta(s)</label>
-                                    <input type="text" value={newAllocation.ports} onChange={e => setNewAllocation(p => ({...p, ports: e.target.value}))} placeholder="25565 ou 25565-25575" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={newAllocation.ports} onChange={e => setNewAllocation(p => ({...p, ports: e.target.value}))} placeholder="25565 ou 25565-25575" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 </div>
                             </div>
                             <div className="flex justify-end">
-                                <button onClick={handleAddAllocations} disabled={isSubmittingAllocations} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all disabled:bg-teal-800 disabled:cursor-not-allowed">
+                                <button onClick={handleAddAllocations} disabled={isSubmittingAllocations} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all disabled:bg-purple-800 disabled:cursor-not-allowed">
                                     {isSubmittingAllocations ? <Icon name="refresh" className="w-5 h-5 animate-spin" /> : <Icon name="plus" className="w-5 h-5" />}
                                     {isSubmittingAllocations ? 'Adicionando...' : 'Adicionar'}
                                 </button>
@@ -312,7 +312,7 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
             {/* Ações do Formulário */}
             <div className="mt-8 border-t border-zinc-700/50 pt-6 flex justify-end gap-4">
                 <Link href="/admin/nodes" className="px-5 py-2.5 rounded-lg bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 transition-colors">Cancelar</Link>
-                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
+                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50 disabled:bg-purple-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
                     {isSubmitting && <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
                     {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Node')}
                 </button>

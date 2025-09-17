@@ -1,4 +1,4 @@
-import Redis, { Redis as RedisClient } from 'ioredis';
+import Redis, { Redis as RedisClient, RedisOptions } from 'ioredis';
 import { Buffer } from 'buffer';
 import crypto from 'crypto';
 
@@ -58,10 +58,51 @@ export class RedisConnector {
     }
 
     public async connect(): Promise<void> {
-        this.client = new Redis(this.config);
-        this.client.on('error', (err) => console.error(`[Redis Client Error]`, err));
-        await this.client.connect().catch(() => {});
-        console.log(`Conectado ao Redis em ${this.config.host}:${this.config.port}`);
+        const redisOptions: RedisOptions = {
+            ...this.config,
+            // Garante que o ioredis tentará reconectar indefinidamente.
+            maxRetriesPerRequest: null,
+            // Define uma estratégia de reconexão com backoff exponencial para não sobrecarregar o servidor.
+            retryStrategy(times: number): number {
+                const delay = Math.min(times * 200, 5000); // Começa com 200ms e vai até 5 segundos.
+                console.log(`[Redis] Conexão perdida. Tentando reconectar em ${delay}ms (tentativa ${times}).`);
+                return delay;
+            },
+        };
+
+        this.client = new Redis(redisOptions);
+
+        // --- LISTENERS DE EVENTOS PARA MELHOR LOGGING ---
+
+        this.client.on('error', (err) => {
+            // O ioredis já tenta reconectar em erros de rede, então apenas logamos.
+            console.error('[Redis Client Error]', err);
+        });
+
+        this.client.on('connect', () => {
+            console.log(`Conectado ao Redis em ${this.config.host}:${this.config.port}`);
+        });
+
+        this.client.on('reconnecting', (delay: any) => {
+            console.log(`[Redis] Reconectando em ${delay}ms...`);
+        });
+
+        this.client.on('close', () => {
+            // Este evento é chamado quando a conexão é fechada.
+            // A estratégia de retryStrategy cuidará da tentativa de reconexão.
+            console.log('[Redis] Conexão com o Redis foi fechada.');
+        });
+
+        // O ioredis começa a conectar automaticamente. Usamos connect() para aguardar
+        // a conexão inicial, mas com um catch para não quebrar a aplicação se o Redis
+        // estiver indisponível no momento da inicialização.
+        try {
+            await this.client.connect();
+        } catch (error) {
+            // O erro já é logado pelo listener 'error'.
+            // Apenas informamos que a reconexão ocorrerá em segundo plano.
+            console.log('[Redis] A conexão inicial falhou. O ioredis tentará reconectar automaticamente.');
+        }
     }
 
     public async disconnect(): Promise<void> {

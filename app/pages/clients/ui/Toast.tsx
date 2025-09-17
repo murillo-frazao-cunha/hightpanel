@@ -12,7 +12,7 @@ interface ToastProps {
 const toastConfig: { [key in ToastType]: { icon: string; bg: string; border: string; text: string; } } = {
     success: { icon: 'check', bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-300' },
     error: { icon: 'alert-triangle', bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-300' },
-    info: { icon: 'info', bg: 'bg-sky-500/10', border: 'border-sky-500/30', text: 'text-sky-300' },
+    info: { icon: 'info', bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-300' },
     warning: { icon: 'alert-triangle', bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-300' },
 };
 

@@ -62,7 +62,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ users, onRequestDelete, cur
                     <h1 className="text-4xl font-bold text-white">Gerenciamento de Usuários</h1>
                     <p className="text-zinc-400 mt-1">Visualize e edite os usuários do painel.</p>
                 </div>
-                <Link href="/admin/users/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50">
+                <Link href="/admin/users/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50">
                     <Icon name="plus" className="w-5 h-5" />
                     Criar Novo Usuário
                 </Link>

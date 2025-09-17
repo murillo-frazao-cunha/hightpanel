@@ -69,15 +69,15 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
                     <div className="p-6 space-y-6">
                         <div>
                             <label htmlFor="username" className="block text-sm font-medium text-zinc-400 mb-2">Nome de Usuário</label>
-                            <input id="username" type="text" name="username" value={formData.username || ''} onChange={handleChange} placeholder="ex: fulano.silva" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="username" type="text" name="username" value={formData.username || ''} onChange={handleChange} placeholder="ex: fulano.silva" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                         </div>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-zinc-400 mb-2">Endereço de E-mail</label>
-                            <input id="email" type="email" name="email" value={formData.email || ''} onChange={handleChange} placeholder="ex: fulano@provedor.com" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="email" type="email" name="email" value={formData.email || ''} onChange={handleChange} placeholder="ex: fulano@provedor.com" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-zinc-400 mb-2">{isEditing ? 'Nova Senha (opcional)' : 'Senha (obrigatória)'}</label>
-                            <input id="password" type="password" name="password" value={formData.password || ''} onChange={handleChange} placeholder={isEditing ? 'Deixe em branco para manter a senha atual' : 'Defina uma senha segura'} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="password" type="password" name="password" value={formData.password || ''} onChange={handleChange} placeholder={isEditing ? 'Deixe em branco para manter a senha atual' : 'Defina uma senha segura'} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                             {isEditing && <p className="text-xs text-zinc-500 mt-1">Se deixar vazio a senha permanecerá a mesma.</p>}
                         </div>
                     </div>
@@ -92,7 +92,7 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
                         </div>
                         <label htmlFor="admin" className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="admin" name="admin" checked={formData.admin || false} onChange={handleChange} className="sr-only peer" />
-                            <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:bg-teal-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
+                            <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500/50 peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
                         </label>
                     </div>
                 </div>
@@ -104,7 +104,7 @@ const UserFormPage: React.FC<UserFormPageProps> = ({ user, onSave, isSubmitting 
                 <button
                     onClick={handleSave}
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-6 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50 disabled:bg-purple-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                     {isSubmitting && <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
                     {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Usuário')}

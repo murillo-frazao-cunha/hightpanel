@@ -31,8 +31,8 @@ export class Nodes {
                     ...data
                 },
                 timeout: 500000, // 5 seconds timeout
-                maxContentLength: 60 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
-                maxBodyLength: 60 * 1024 * 1024
+                maxContentLength: Infinity,
+                maxBodyLength:  Infinity
             });
             return response.data;
         } catch (e) {

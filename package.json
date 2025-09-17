@@ -16,6 +16,7 @@
     "ansi_up": "^6.0.2",
     "axios": "^1.12.0",
     "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
     "framer-motion": "^12.23.12",
     "ioredis": "^5.7.0",

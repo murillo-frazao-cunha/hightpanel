@@ -35,6 +35,7 @@ export interface ClientServerData {
     id: string;
     name: string;
     description?: string;
+    group?: string;
     status: string;
     ram: number;
     cpu: number;
@@ -142,9 +143,9 @@ export async function changeAllocation(uuid: string, allocationId: string | null
     }
 }
 
-export async function editName(uuid: string, name: string, description: string): Promise<{ success: boolean }> {
+export async function editName(uuid: string, name: string, description: string, group?: string): Promise<{ success: boolean }> {
     try {
-        const { data } = await api.post('/edit-name', { uuid, name, description });
+        const { data } = await api.post('/edit-name', { uuid, name, description, group });
         return { success: data?.success === true };
     }
     catch (error: any) {

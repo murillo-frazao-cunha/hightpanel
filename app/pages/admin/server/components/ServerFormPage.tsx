@@ -253,8 +253,23 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
         return allocations.filter(alloc => {
             const isPrimary = alloc.id === formData.primaryAllocationId;
             const isAlreadyAdded = formData.additionalAllocationIds?.includes(alloc.id);
-            return !isPrimary && !isAlreadyAdded;
+            const isUnassigned = !alloc.assignedToServerId;
+            return !isPrimary && !isAlreadyAdded && isUnassigned;
         });
+    }, [allocations, formData.primaryAllocationId, formData.additionalAllocationIds]);
+
+    // Alocações disponíveis para seleção como principal: somente livres
+    // (ou a alocação atual, quando em modo edição)
+    const primaryAllocationOptions = useMemo(() => {
+        return allocations
+            .filter(alloc => {
+                const isInAdditional = formData.additionalAllocationIds?.includes(alloc.id);
+                if (isInAdditional) return false;
+                const isCurrentPrimary = alloc.id === formData.primaryAllocationId;
+                const isUnassigned = !alloc.assignedToServerId;
+                return isCurrentPrimary || isUnassigned;
+            })
+            .map(alloc => ({ value: alloc.id, label: `${alloc.ip}:${alloc.port}` }));
     }, [allocations, formData.primaryAllocationId, formData.additionalAllocationIds]);
 
 
@@ -389,13 +404,10 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                         <label className="block text-sm font-medium text-zinc-400 mb-2">Alocação Principal</label>
                         <CustomSelect
                             placeholder="Selecione uma Alocação..."
-                            options={allocations
-                                .filter(alloc => !formData.additionalAllocationIds?.includes(alloc.id))
-                                .map(alloc => ({ value: alloc.id, label: `${alloc.ip}:${alloc.port}` }))
-                            }
+                            options={primaryAllocationOptions}
                             value={formData.primaryAllocationId || ''}
                             onChange={(value) => handleChange('primaryAllocationId', value)}
-                            disabled={isLoadingAllocations || allocations.length === 0}
+                            disabled={isLoadingAllocations || primaryAllocationOptions.length === 0}
                         />
                     </div>
                 </div>

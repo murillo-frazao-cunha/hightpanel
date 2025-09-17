@@ -56,6 +56,9 @@ interface ServerData {
         port: number;
         assignedTo: string | null;
     }]
+
+
+    group?: string; // opcional, pode ser usado para categorizar servidores
 }
 
 interface LogEntry {
@@ -223,7 +226,8 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                         addicionalAllocationsNumbers: data.addicionalAllocationsNumbers || 0,
 
                         additionalAllocation: data.additionalAllocation,
-                        primaryAllocation: data.primaryAllocation
+                        primaryAllocation: data.primaryAllocation,
+                        group: data.group
                     };
 
                     if (cached && !prev) {

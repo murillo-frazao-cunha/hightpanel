@@ -9,8 +9,9 @@ import {interpretNodeHelper} from "@/backend/routes/api/nodes/NodeHelper";
 import {interpretServersClient} from "@/backend/routes/servers/ServersClient";
 import {interpretDatabaseHosts} from "@/backend/routes/admin/database/DatabaseHosts";
 import {interpretServersFileManager} from "@/backend/routes/servers/ServersFileManagerClient";
-import {createFirstUser, interpreteIncludesUser} from "@/backend/routes/includes_user";
-
+import { interpreteIncludesUser } from "@/backend/routes/includes_user";
+import { version } from "@/package.json"
+import {interpretApi} from "@/backend/routes/admin/api/Api";
 // --- TIPOS ---
 // Define o formato de uma função que manipula uma rota da API.
 type ApiHandler = (
@@ -33,10 +34,6 @@ export const apiRoutes: ApiRouteConfig[] = [
     {
         pattern: '/api/includes_user',
         GET: interpreteIncludesUser
-    },
-    {
-        pattern: '/api/includes_user/create_first_user',
-        POST: createFirstUser
     },
     {
         pattern: "/api/nodes/helper/[[action]]",
@@ -63,9 +60,14 @@ export const apiRoutes: ApiRouteConfig[] = [
         POST: interpretNodes
     },
     {
+        pattern: '/api/admin/api/[[action]]',
+        GET: interpretApi,
+        POST: interpretApi
+    },
+    {
         pattern: '/api/version',
         GET: async () => {
-            return NextResponse.json({ version: '1.0.0' });
+            return NextResponse.json({ version: version });
         }
     },
     {

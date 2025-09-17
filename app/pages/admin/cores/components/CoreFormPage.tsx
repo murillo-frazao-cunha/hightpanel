@@ -160,11 +160,11 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
                     <div className="p-6 space-y-6">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">Nome do Core</label>
-                            <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Minecraft (Paper)" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="name" type="text" name="name" value={formData.name || ''} onChange={handleChange} placeholder="ex: Minecraft (Paper)" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição</label>
-                            <textarea name="description" value={(formData as any).description || ''} onChange={(e)=>handleChange(e as any)} rows={3} placeholder="Breve descrição do core..." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all resize-none" />
+                            <textarea name="description" value={(formData as any).description || ''} onChange={(e)=>handleChange(e as any)} rows={3} placeholder="Breve descrição do core..." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all resize-none" />
                         </div>
                         {isEditing && core?.creatorEmail && (
                             <div className="text-xs text-zinc-500">Criado por: <span className="text-zinc-300">{core.creatorEmail}</span></div>
@@ -205,11 +205,11 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
                     <div className="p-6 space-y-6">
                         <div>
                             <label htmlFor="startupCommand" className="block text-sm font-medium text-zinc-400 mb-2">Comando de Inicialização</label>
-                            <input id="startupCommand" type="text" name="startupCommand" value={formData.startupCommand || ''} onChange={handleChange} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="startupCommand" type="text" name="startupCommand" value={formData.startupCommand || ''} onChange={handleChange} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                         </div>
                         <div>
                             <label htmlFor="stopCommand" className="block text-sm font-medium text-zinc-400 mb-2">Comando de Desligamento</label>
-                            <input id="stopCommand" type="text" name="stopCommand" value={formData.stopCommand || ''} onChange={handleChange} placeholder="ex: stop" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                            <input id="stopCommand" type="text" name="stopCommand" value={formData.stopCommand || ''} onChange={handleChange} placeholder="ex: stop" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                         </div>
                     </div>
                 </div>
@@ -221,12 +221,12 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
                     <div className="p-6 space-y-4">
                         {formData.dockerImages?.map((img, index) => (
                             <div key={index} className="flex items-center gap-4">
-                                <input type="text" value={img.name} onChange={(e) => handleImageChange(index, 'name', e.target.value)} placeholder="Nome (ex: Java 11)" className="w-1/3 bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
-                                <input type="text" value={img.image} onChange={(e) => handleImageChange(index, 'image', e.target.value)} placeholder="Imagem (ex: ghcr.io/...)" className="flex-grow bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                <input type="text" value={img.name} onChange={(e) => handleImageChange(index, 'name', e.target.value)} placeholder="Nome (ex: Java 11)" className="w-1/3 bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
+                                <input type="text" value={img.image} onChange={(e) => handleImageChange(index, 'image', e.target.value)} placeholder="Imagem (ex: ghcr.io/...)" className="flex-grow bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 <button onClick={() => removeImage(index)} className="p-2 text-zinc-400 hover:text-rose-400 transition-colors"><Icon name="trash" className="w-5 h-5" /></button>
                             </div>
                         ))}
-                        <button onClick={addImage} className="flex items-center gap-2 text-sm text-teal-400 hover:text-teal-300 transition-colors font-semibold">
+                        <button onClick={addImage} className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors font-semibold">
                             <Icon name="plusCircle" className="w-5 h-5" /> Adicionar Imagem
                         </button>
                     </div>
@@ -244,24 +244,24 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-400 mb-2">Nome da Variável</label>
-                                        <input type="text" value={variable.name} onChange={e => handleVariableChange(index, 'name', e.target.value)} placeholder="Senha do Servidor" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                        <input type="text" value={variable.name} onChange={e => handleVariableChange(index, 'name', e.target.value)} placeholder="Senha do Servidor" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-400 mb-2">Variável de Ambiente (ID)</label>
-                                        <input type="text" value={variable.envVariable} onChange={e => handleVariableChange(index, 'envVariable', e.target.value)} placeholder="SERVER_PASSWORD" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                        <input type="text" value={variable.envVariable} onChange={e => handleVariableChange(index, 'envVariable', e.target.value)} placeholder="SERVER_PASSWORD" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição</label>
-                                    <input type="text" value={variable.description} onChange={e => handleVariableChange(index, 'description', e.target.value)} placeholder="Define a senha para entrar no servidor." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={variable.description} onChange={e => handleVariableChange(index, 'description', e.target.value)} placeholder="Define a senha para entrar no servidor." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-zinc-400 mb-2">Regras de Validação</label>
-                                    <input type="text" value={variable.rules} onChange={e => handleVariableChange(index, 'rules', e.target.value)} placeholder="required|string|min:4" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all" />
+                                    <input type="text" value={variable.rules} onChange={e => handleVariableChange(index, 'rules', e.target.value)} placeholder="required|string|min:4" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono text-sm placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all" />
                                 </div>
                             </div>
                         ))}
-                        <button onClick={addVariable} className="flex items-center gap-2 text-sm text-teal-400 hover:text-teal-300 transition-colors font-semibold">
+                        <button onClick={addVariable} className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors font-semibold">
                             <Icon name="plusCircle" className="w-5 h-5" /> Adicionar Variável
                         </button>
                     </div>
@@ -286,7 +286,7 @@ const CoreFormPage: React.FC<CoreFormPageProps> = ({ core, onSave, isSubmitting,
             {/* Ações do Formulário */}
             <div className="mt-8 border-t border-zinc-700/50 pt-6 flex justify-end gap-4">
                 <Link href="/admin/cores" className="px-5 py-2.5 rounded-lg bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 transition-colors">Cancelar</Link>
-                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
+                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50 disabled:bg-purple-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
                     {isSubmitting && <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
                     {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Core')}
                 </button>

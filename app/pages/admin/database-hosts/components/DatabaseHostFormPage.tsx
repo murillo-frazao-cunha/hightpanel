@@ -74,27 +74,27 @@ const DatabaseHostFormPage: React.FC<Props> = ({ host, onSave, isSubmitting, err
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">Nome*</label>
-              <input value={formData.name} onChange={e => handleChange('name', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input value={formData.name} onChange={e => handleChange('name', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">Host*</label>
-              <input value={formData.host} onChange={e => handleChange('host', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input value={formData.host} onChange={e => handleChange('host', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">Porta*</label>
-              <input type="number" value={formData.port} onChange={e => handleChange('port', e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input type="number" value={formData.port} onChange={e => handleChange('port', e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">Usuário*</label>
-              <input value={formData.username} onChange={e => handleChange('username', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input value={formData.username} onChange={e => handleChange('username', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-2">Senha {isEditing && <span className="text-xs text-zinc-500">(deixe vazio para manter)</span>}</label>
-              <input type="password" value={formData.password} onChange={e => handleChange('password', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input type="password" value={formData.password} onChange={e => handleChange('password', e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-zinc-400 mb-2">Link phpMyAdmin (opcional)</label>
-              <input value={formData.phpmyAdminLink} onChange={e => handleChange('phpmyAdminLink', e.target.value)} placeholder="https://panel.exemplo.com/phpmyadmin" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+              <input value={formData.phpmyAdminLink} onChange={e => handleChange('phpmyAdminLink', e.target.value)} placeholder="https://panel.exemplo.com/phpmyadmin" className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none" />
             </div>
           </div>
         </div>
@@ -102,7 +102,7 @@ const DatabaseHostFormPage: React.FC<Props> = ({ host, onSave, isSubmitting, err
 
       <div className="mt-8 border-t border-zinc-700/50 pt-6 flex justify-end gap-4">
         <Link href="/admin/database-hosts" className="px-5 py-2.5 rounded-lg bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 transition-colors">Cancelar</Link>
-        <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
+        <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50 disabled:bg-purple-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
           {isSubmitting && <Icon name="loader" className="w-5 h-5 animate-spin" />}
           {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Host')}
         </button>
@@ -112,4 +112,3 @@ const DatabaseHostFormPage: React.FC<Props> = ({ host, onSave, isSubmitting, err
 };
 
 export default DatabaseHostFormPage;
-

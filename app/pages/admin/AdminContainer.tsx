@@ -108,7 +108,7 @@ export default function AdminContainer() {
                             </span>
                         </div>
                     ) : (
-                        <p className="text-2xl font-bold text-teal-400">Atualizado</p>
+                        <p className="text-2xl font-bold text-purple-400">Atualizado</p>
                     )}
                 </StatusCard>
             </div>
@@ -117,7 +117,7 @@ export default function AdminContainer() {
 
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans-serif] flex">
+        <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans_serif] flex">
             <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
             <Background />
             <AdminSidebar />

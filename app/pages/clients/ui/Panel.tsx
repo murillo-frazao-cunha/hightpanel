@@ -10,7 +10,7 @@ interface PanelProps {
 export const Panel = ({ children, className }: PanelProps) => (
     <div
         className={twMerge(
-            'bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-[4px] transition-all duration-300',
+            'bg-zinc-900/40 backdrop-blur-xl rounded-[4px] transition-all duration-300',
             className
         )}
     >

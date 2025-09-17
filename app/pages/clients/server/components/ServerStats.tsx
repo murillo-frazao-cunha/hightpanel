@@ -3,27 +3,47 @@ import React from 'react';
 import { Icon } from '../../ui/Icon';
 import { Panel } from '../../ui/Panel';
 import { useServer } from '../context/ServerContext'; // Importar o hook
+import { motion } from 'framer-motion';
+
+const cardContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08, // Atraso entre cada card
+        },
+    },
+};
+
+const cardVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+};
 
 const InfoCard = ({ title, value, total, unit, icon, statusColor, isHighUsage = false }: any) => (
-    <Panel className="p-5">
-        <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3 text-zinc-400">
-                {icon}
-                <h4 className="font-semibold">{title}</h4>
+    <motion.div variants={cardVariants}>
+        <Panel className="p-4">
+            <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-lg bg-zinc-900/50">
+                    {icon}
+                </div>
+                <div className="flex-grow">
+                    <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">{title}</h4>
+                        {statusColor && <div className={`w-2.5 h-2.5 rounded-full ${statusColor} shadow-[0_0_10px_1px] ${statusColor.replace('bg-', 'shadow-')}`}></div>}
+                    </div>
+                    <div className="flex items-baseline">
+                        <p className={`text-2xl font-bold transition-colors duration-300 ${isHighUsage ? 'text-rose-400' : 'text-white'}`}>{value}</p>
+                        {total && <p className="text-zinc-400 font-normal ml-1.5">/ {total}{unit}</p>}
+                        {!total && unit && <p className="text-zinc-400 font-normal ml-1.5">{unit}</p>}
+                    </div>
+                </div>
             </div>
-            {statusColor && <div className={`w-3 h-3 rounded-full ${statusColor} shadow-[0_0_12px_2px] ${statusColor.replace('bg-', 'shadow-')}`}></div>}
-        </div>
-        <div className="flex items-baseline">
-            <p className={`text-3xl font-semibold transition-colors duration-300 ${isHighUsage ? 'text-rose-400' : 'text-white'}`}>{value}</p>
-            {total && <p className="text-zinc-400 font-normal ml-1"> / {total}{unit}</p>}
-            {!total && unit && <p className="text-zinc-400 font-normal ml-1">{unit}</p>}
-        </div>
-    </Panel>
+        </Panel>
+    </motion.div>
 );
 
-// Componente não recebe mais a prop 'server'
 export const ServerStats = () => {
-    // Pega os dados diretamente do contexto
     const { server, nodeOffline } = useServer();
 
     if (nodeOffline) {
@@ -38,13 +58,10 @@ export const ServerStats = () => {
         );
     }
 
-    // Lida com o caso em que os dados ainda não carregaram
     if (!server) {
         return (
-            // Renderiza placeholders ou "skeletons" enquanto os dados carregam
             Array.from({ length: 5 }).map((_, i) => (
-                // eslint-disable-next-line react/no-children-prop
-                <Panel key={i} className="p-5 h-[98px] animate-pulse" children={undefined} />
+                <Panel key={i} className="p-5 h-[88px] animate-pulse" children={undefined} />
             ))
         );
     }
@@ -62,22 +79,27 @@ export const ServerStats = () => {
     const isRamHigh = ramUsagePercent > 85;
 
     return (
-        <>
-            <InfoCard 
+        <motion.div
+            variants={cardContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col gap-4"
+        >
+            <InfoCard
                 title="Status"
                 value={server.status === 'running' ? server.uptime : currentStatus.text}
-                icon={<Icon name="power" className="w-5 h-5"/>}
-                statusColor={currentStatus.color} 
+                icon={<Icon name="power" className="w-6 h-6"/>}
+                statusColor={currentStatus.color}
             />
-            <InfoCard title="Uso de CPU" value={`${cpuUsagePercent.toFixed(2)}`} unit="%" total={`${server.maxCpu}`} icon={<Icon name="cpu" className="w-5 h-5"/>} isHighUsage={isCpuHigh} />
-            <InfoCard title="Uso de RAM" value={server.ram.used.toFixed(2)} total={server.ram.total.toFixed(2)} unit={` ${server.ram.unit}`} icon={<Icon name="ram" className="w-5 h-5"/>} isHighUsage={isRamHigh} />
-            <InfoCard title="Uso de Disco" value={server.disk.used.toFixed(2)} total={server.disk.total.toFixed(2)} unit={` ${server.disk.unit}`} icon={<Icon name="disk" className="w-5 h-5"/>} />
+            <InfoCard title="Uso de CPU" value={`${cpuUsagePercent.toFixed(2)}`} unit="%" total={`${server.maxCpu}`} icon={<Icon name="cpu" className="w-6 h-6"/>} isHighUsage={isCpuHigh} />
+            <InfoCard title="Uso de RAM" value={server.ram.used.toFixed(2)} total={server.ram.total.toFixed(2)} unit={` ${server.ram.unit}`} icon={<Icon name="ram" className="w-6 h-6"/>} isHighUsage={isRamHigh} />
+            <InfoCard title="Uso de Disco" value={server.disk.used.toFixed(2)} total={server.disk.total.toFixed(2)} unit={` ${server.disk.unit}`} icon={<Icon name="disk" className="w-6 h-6"/>} />
             {server.status !== 'stopped' && (
-                <>
-                    <InfoCard title="Network In" value={server.networkIn.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowDown" className="w-5 h-5" />} />
-                    <InfoCard title="Network Out" value={server.networkOut.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowUp" className="w-5 h-5" />} />
-                </>
+                <motion.div variants={cardVariants} className="flex flex-col gap-4">
+                    <InfoCard title="Network In" value={server.networkIn.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowDown" className="w-6 h-6" />} />
+                    <InfoCard title="Network Out" value={server.networkOut.toFixed(2)} unit=" KiB/s" icon={<Icon name="arrowUp" className="w-6 h-6" />} />
+                </motion.div>
             )}
-        </>
+        </motion.div>
     );
 };

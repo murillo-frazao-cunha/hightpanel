@@ -34,9 +34,22 @@ export async function createFirstUser(request: NextRequest, params: { [key: stri
     if(!emailRegex.test(email)) {
         return NextResponse.json({ status: 'error', error: 'Email inválido' })
     }
-    if(password.length < 6) {
-        return NextResponse.json({ status: 'error', error: 'Senha muito curta' })
+    if (password.length < 8) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve ter no mínimo 8 caracteres.' });
     }
+    if (!/(?=.*[a-z])/.test(password)) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos uma letra minúscula.' });
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos uma letra maiúscula.' });
+    }
+    if (!/(?=.*\d)/.test(password)) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos um número.' });
+    }
+    if (!/(?=.*[@$!%*?&])/.test(password)) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos um caractere especial (@, $, !, %, *, ?, &).' });
+    }
+
     const user = await Users.createUser({
         name,
         email,

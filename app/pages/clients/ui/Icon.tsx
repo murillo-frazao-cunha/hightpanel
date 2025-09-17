@@ -1,4 +1,3 @@
-import { line } from "framer-motion/client";
 import React from 'react';
 
 // SVG Icons Component

@@ -23,7 +23,7 @@ const CoreRow = ({ core, onDelete, onExport }: { core: Core; onDelete: (uuid: st
             <div className="flex items-center bg-zinc-900/40 backdrop-blur-2xl rounded-lg p-4 transition-all duration-300 hover:bg-zinc-900/60 hover:ring-2 hover:ring-zinc-700/80">
                 {/* Ícone */}
                 <div className="bg-zinc-800/50 p-3 rounded-lg">
-                    <Icon name="cpu" className="w-6 h-6 text-teal-400" />
+                    <Icon name="cpu" className="w-6 h-6 text-purple-400" />
                 </div>
                 {/* Informações */}
                 <div className="ml-5 flex-grow">
@@ -33,7 +33,7 @@ const CoreRow = ({ core, onDelete, onExport }: { core: Core; onDelete: (uuid: st
                 </div>
                 {/* Ações */}
                 <div className="ml-auto flex items-center gap-2">
-                    <button onClick={(e)=>{e.preventDefault();e.stopPropagation();onExport(core.id);}} className="p-2 text-zinc-400 hover:text-teal-400 transition-colors" title="Exportar Core"><Icon name="download" className="w-5 h-5"/></button>
+                    <button onClick={(e)=>{e.preventDefault();e.stopPropagation();onExport(core.id);}} className="p-2 text-zinc-400 hover:text-purple-400 transition-colors" title="Exportar Core"><Icon name="download" className="w-5 h-5"/></button>
                     <button onClick={handleDeleteClick} className="p-2 text-zinc-400 hover:text-rose-400 transition-colors" title="Deletar Core">
                         <Icon name="trash" className="w-5 h-5" />
                     </button>
@@ -58,7 +58,7 @@ const CoreListPage: React.FC<CoreListPageProps> = ({ cores, onDelete, onExport, 
                     <button onClick={()=>document.getElementById(fileInputId)?.click()} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-700 text-white font-semibold hover:bg-zinc-600 transition-all duration-300">
                         <Icon name="upload" className="w-5 h-5" /> Importar Core
                     </button>
-                    <Link href="/admin/cores/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50">
+                    <Link href="/admin/cores/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50">
                         <Icon name="plus" className="w-5 h-5" />
                         Criar Novo Core
                     </Link>

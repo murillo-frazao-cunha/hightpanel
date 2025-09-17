@@ -11,7 +11,7 @@ interface ServerListPageProps {
 
 const ServerRow: React.FC<{ server: Server; onDelete: (uuid: string) => void; }> = ({ server, onDelete }) => {
     const statusConfig = {
-        running: { text: 'Online', color: 'bg-teal-500' },
+        running: { text: 'Online', color: 'bg-purple-500' },
         stopped: { text: 'Offline', color: 'bg-rose-500' },
         installing: { text: 'Instalando', color: 'bg-amber-500' },
         error: { text: 'Erro', color: 'bg-rose-700' }
@@ -51,7 +51,7 @@ const ServerListPage: React.FC<ServerListPageProps> = ({ servers, onDelete }) =>
                     <h1 className="text-4xl font-bold text-white">Gerenciamento de Servidores</h1>
                     <p className="text-zinc-400 mt-1">Crie, configure e gerencie os servidores dos seus clientes.</p>
                 </div>
-                <Link href="/admin/servers/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all">
+                <Link href="/admin/servers/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all">
                     <Icon name="plus" className="w-5 h-5" />
                     Criar Novo Servidor
                 </Link>

@@ -8,6 +8,7 @@ import {AllocationTable} from "@/backend/database/models/AllocationModel";
 import {CoreTable} from "@/backend/database/models/CoreModel";
 import {ServerTable} from "@/backend/database/models/ServerModel";
 import {DatabaseHostTable} from "@/backend/database/models/DatabasesHosts";
+import {ApiTable} from "@/backend/database/models/ApiModel";
 
 // Interface para definir a estrutura do objeto de tabelas
 export interface ITables {
@@ -17,6 +18,8 @@ export interface ITables {
     allocationTable: AllocationTable
     serverTable: ServerTable
     databaseHostTable: DatabaseHostTable
+
+    apiTable: ApiTable
     connector: RedisConnector;
 }
 
@@ -43,6 +46,7 @@ export const getTables = (): Promise<ITables> => {
                 nodeTable: new NodeTable(connector),
                 serverTable: new ServerTable(connector),
                 coreTable: new CoreTable(connector),
+                apiTable: new ApiTable(connector),
                 allocationTable: new AllocationTable(connector),
                 databaseHostTable: new DatabaseHostTable(connector),
                 // outraTabela: new OutraTabela(connector),

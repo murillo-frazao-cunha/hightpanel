@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { Sidebar } from './ui/Sidebar';
@@ -8,6 +8,7 @@ import { Icon } from './ui/Icon';
 import { Background } from './ui/Background';
 import { useUser } from "@/app/contexts/UserContext";
 import { getServerUsage } from './server/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Tipos ---
 type ServerStatus = 'running' | 'initializing' | 'stopped';
@@ -20,15 +21,11 @@ interface Server {
     cpu: { used: number; total: number };
     ram: { used: number; total: number; unit: 'MB' | 'GB' };
     disk: { used: number; total: number; unit: 'MB' | 'GB' };
-    isFavorite?: boolean;
-    error?: boolean; // Adicionado para lidar com erros de status
+    group?: string | null;
+    error?: boolean;
 }
 
-// --- Constantes de Cache ---
-const CACHE_MY_SERVERS_KEY = 'cachedMyServers';
-const CACHE_PUBLIC_SERVERS_KEY = 'cachedPublicServers';
-
-// --- Componentes Reutilizáveis (Com Animações e Tratamento de Erro) ---
+// --- Componentes Reutilizáveis ---
 
 const StatDisplay = ({ used, total, unit, label, icon }: { used: number, total: number, unit: string, label: string, icon: string }) => {
     const percentage = total > 0 ? (used / total) * 100 : 0;
@@ -66,7 +63,7 @@ const ServerRow = ({ server }: { server: Server }) => {
     const statusConfig = {
         running: { text: 'Rodando', color: 'bg-teal-500' },
         stopped: { text: 'Parado', color: 'bg-rose-500' },
-        initializing: { text: 'Inicializando', color: 'bg-amber-500' }, // Usado para status de erro também
+        initializing: { text: 'Inicializando', color: 'bg-amber-500' },
     };
     const currentStatus = statusConfig[server.status];
 
@@ -81,7 +78,7 @@ const ServerRow = ({ server }: { server: Server }) => {
                         <Icon name="globe" className="w-4 h-4" />
                         <span>{server.ip}</span>
                         <button onClick={handleCopy} className="text-zinc-500 hover:text-white transition-colors" title="Copiar IP">
-                            <Icon name={copied ? 'check' : 'copy'} className={`w-4 h-4 transition-all ${copied ? 'text-teal-400 scale-110' : ''}`} />
+                            <Icon name={copied ? 'check' : 'copy'} className={`w-4 h-4 transition-all ${copied ? 'text-purple-400 scale-110' : ''}`} />
                         </button>
                     </div>
                 </div>
@@ -109,7 +106,6 @@ const ServerRow = ({ server }: { server: Server }) => {
     );
 };
 
-
 // --- Componente Principal da Página ---
 const Home = () => {
     const { user } = useUser();
@@ -119,208 +115,180 @@ const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
     const isInitialLoad = useRef(true);
 
-    // Função para transformar os dados da API (com tratamento de erro)
+    const [categorizationEnabled, setCategorizationEnabled] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState('Todos');
+
+    useEffect(() => {
+        const savedCategorization = localStorage.getItem('categorizationEnabled');
+        if (savedCategorization !== null) setCategorizationEnabled(JSON.parse(savedCategorization));
+
+        const savedCategory = localStorage.getItem('selectedCategory');
+        if (savedCategory) setSelectedCategory(savedCategory);
+
+        if (user?.admin) {
+            const savedAdminView = localStorage.getItem('adminServerView');
+            if (savedAdminView !== null) setShowPublic(JSON.parse(savedAdminView));
+        }
+    }, [user]);
+
+    useEffect(() => { localStorage.setItem('categorizationEnabled', JSON.stringify(categorizationEnabled)); }, [categorizationEnabled]);
+    useEffect(() => { localStorage.setItem('selectedCategory', selectedCategory); }, [selectedCategory]);
+    useEffect(() => { if (user?.admin) localStorage.setItem('adminServerView', JSON.stringify(showPublic)); }, [showPublic, user]);
+
     const processServerData = async (apiData: any[]): Promise<Server[]> => {
         if (!Array.isArray(apiData)) return [];
         return Promise.all(apiData.map(async server => {
             const ramInGB = (server.ram || 0) / 1024;
             const diskInGB = (server.disk || 0) / 1024;
-
             try {
                 const usageData = await getServerUsage(server.id);
                 let status: ServerStatus = 'stopped';
-                let cpuUsed = 0;
-                let ramUsedGB = 0;
-                let diskUsed = 0
-
+                let cpuUsed = 0, ramUsedGB = 0, diskUsed = 0;
                 if (usageData) {
-                    const stateMap: Record<string, ServerStatus> = {
-                        running: 'running', online: 'running', started: 'running',
-                        starting: 'initializing', installing: 'initializing',
-                        stopping: 'stopped', stopped: 'stopped', offline: 'stopped', error: 'stopped'
-                    };
-                    // @ts-ignore
-                    status = stateMap[usageData.state] || 'stopped';
+                    const stateMap: Record<string, ServerStatus> = { running: 'running', online: 'running', started: 'running', starting: 'initializing', installing: 'initializing', stopping: 'stopped', stopped: 'stopped', offline: 'stopped', error: 'stopped' };
+                    status = stateMap[usageData.state as string] || 'stopped';
                     cpuUsed = typeof usageData.cpu === 'number' ? usageData.cpu : 0;
-                    if (typeof usageData.memory === 'number') {
-                        ramUsedGB = usageData.memory / 1024 / 1024 / 1024;
-                    }
+                    if (typeof usageData.memory === 'number') ramUsedGB = usageData.memory / 1024 / 1024 / 1024;
                     diskUsed = typeof usageData.disk === 'number' ? usageData.disk / 1024 / 1024 / 1024 : 0;
                 }
-
-                return {
-                    id: server.id,
-                    name: server.name,
-                    ip: `${server.primaryAllocation?.externalIp}:${server.primaryAllocation?.port}`,
-                    status,
-                    cpu: { used: cpuUsed, total: server.cpu || 100 },
-                    ram: { used: parseFloat(ramUsedGB.toFixed(2)), total: parseFloat(ramInGB.toFixed(2)), unit: 'GB' },
-                    disk: { used: parseFloat((diskUsed * 0.2).toFixed(2)), total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' },
-                    error: false,
-                };
-
+                return { id: server.id, name: server.name, ip: `${server.primaryAllocation?.externalIp}:${server.primaryAllocation?.port}`, status, cpu: { used: cpuUsed, total: server.cpu || 100 }, ram: { used: parseFloat(ramUsedGB.toFixed(2)), total: parseFloat(ramInGB.toFixed(2)), unit: 'GB' }, disk: { used: parseFloat((diskUsed * 0.2).toFixed(2)), total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' }, error: false, group: server.group || null };
             } catch (e) {
-                // Se a chamada para getServerUsage falhar, retorna o servidor com estado de erro
-                return {
-                    id: server.id,
-                    name: server.name,
-                    ip: `${server.primaryAllocation?.externalIp}:${server.primaryAllocation?.port}`,
-                    status: 'initializing', // Status amarelo para indicar atenção
-                    cpu: { used: 0, total: server.cpu || 100 },
-                    ram: { used: 0, total: parseFloat(ramInGB.toFixed(2)), unit: 'GB' },
-                    disk: { used: 0, total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' },
-                    error: true,
-                };
+                return { id: server.id, name: server.name, ip: `${server.primaryAllocation?.externalIp}:${server.primaryAllocation?.port}`, status: 'initializing', cpu: { used: 0, total: server.cpu || 100 }, ram: { used: 0, total: parseFloat(ramInGB.toFixed(2)), unit: 'GB' }, disk: { used: 0, total: parseFloat(diskInGB.toFixed(2)), unit: 'GB' }, error: true, group: server.group || null };
             }
         }));
     };
 
-    // Efeito para carregar dados do cache na inicialização
-    useEffect(() => {
-        try {
-            const cachedMy = localStorage.getItem(CACHE_MY_SERVERS_KEY);
-            const cachedPublic = localStorage.getItem(CACHE_PUBLIC_SERVERS_KEY);
-            if (cachedMy) setMyServers(JSON.parse(cachedMy));
-            if (cachedPublic) setPublicServers(JSON.parse(cachedPublic));
-        } catch (error) {
-            console.error("Erro ao ler servidores do cache:", error);
-        }
-    }, []);
-
-    // Efeito para carregar a preferência do admin (sem alterações)
-    useEffect(() => {
-        if (user?.admin) {
-            const savedPreference = localStorage.getItem('adminServerView');
-            if (savedPreference !== null) {
-                setShowPublic(JSON.parse(savedPreference));
-            }
-        }
-    }, [user]);
-
-    // Função memoizada para buscar os servidores
     const fetchServers = useCallback(async () => {
-        if (!user) {
-            setIsLoading(false);
-            return;
-        }
-
-        if (isInitialLoad.current) {
-            setIsLoading(true);
-        }
+        if (!user) { setIsLoading(false); return; }
+        if (isInitialLoad.current) setIsLoading(true);
 
         const endpoint = '/api/client/servers/get-all';
         const payload = { others: showPublic };
-        const cacheKey = showPublic ? CACHE_PUBLIC_SERVERS_KEY : CACHE_MY_SERVERS_KEY;
-
         try {
             const response = await axios.post(endpoint, payload);
             const processedData = await processServerData(response.data);
+            if (showPublic) setPublicServers(processedData);
+            else setMyServers(processedData);
+        } catch (error) { console.error(`Erro ao buscar servidores:`, error); }
+        finally { if (isInitialLoad.current) { setIsLoading(false); isInitialLoad.current = false; } }
+    }, [showPublic, user]);
 
-            const currentData = showPublic ? publicServers : myServers;
-            if (JSON.stringify(processedData) !== JSON.stringify(currentData)) {
-                if (showPublic) {
-                    setPublicServers(processedData);
-                } else {
-                    setMyServers(processedData);
-                }
-                // Salva no cache apenas os servidores sem erro
-                const dataToCache = processedData.filter(s => !s.error);
-                localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
-            }
-        } catch (error) {
-            console.error(`Erro ao buscar servidores (${showPublic ? 'públicos' : 'meus'}):`, error);
-        } finally {
-            if (isInitialLoad.current) {
-                setIsLoading(false);
-                isInitialLoad.current = false;
-            }
-        }
-    }, [showPublic, user, myServers, publicServers]);
-
-    // Efeito para buscar os dados e iniciar o intervalo de atualização
     useEffect(() => {
         if (user) {
-            fetchServers(); // Busca inicial
+            fetchServers();
             const intervalId = setInterval(fetchServers, 5000);
             return () => clearInterval(intervalId);
         } else {
-            setMyServers([]);
-            setPublicServers([]);
-            setIsLoading(false);
+            setMyServers([]); setPublicServers([]); setIsLoading(false);
         }
     }, [user, fetchServers]);
 
-    // Efeito para salvar a preferência do admin
-    useEffect(() => {
-        if (user?.admin) {
-            localStorage.setItem('adminServerView', JSON.stringify(showPublic));
-        }
-    }, [showPublic, user]);
-
     const serversToShow = showPublic ? publicServers : myServers;
+    const hasCategorizableServers = useMemo(() => serversToShow.some(s => s.group), [serversToShow]);
+
+    const categories = useMemo(() => {
+        if (!hasCategorizableServers) return [];
+        const groups = new Set<string>();
+        serversToShow.forEach(server => server.group && groups.add(server.group));
+        const allCategories = ['Todos', ...Array.from(groups).sort()];
+        if (serversToShow.some(server => !server.group)) allCategories.push('Sem Categoria');
+        return allCategories;
+    }, [serversToShow, hasCategorizableServers]);
+
+    const filteredServers = useMemo(() => {
+        if (!categorizationEnabled || selectedCategory === 'Todos' || !categories.includes(selectedCategory)) {
+            if (!categories.includes(selectedCategory)) setSelectedCategory('Todos');
+            return serversToShow;
+        }
+        if (selectedCategory === 'Sem Categoria') return serversToShow.filter(server => !server.group);
+        return serversToShow.filter(server => server.group === selectedCategory);
+    }, [serversToShow, selectedCategory, categorizationEnabled, categories]);
+
+    const AdminViewSwitch = ({ showPublic, setShowPublic }: { showPublic: boolean, setShowPublic: (show: boolean) => void }) => {
+        const tabs = [{ label: 'Meus', value: false }, { label: 'Outros', value: true }];
+
+        return (
+            <div className="p-1 flex space-x-1 bg-zinc-800/90 rounded-xl">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.label}
+                        onClick={() => setShowPublic(tab.value)}
+                        className={`relative rounded-lg px-4 py-1 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-purple-500 ${showPublic === tab.value ? '' : 'hover:text-white'}`}>
+                        {showPublic === tab.value && (
+                            <motion.div
+                                layoutId="admin-view-switch-active-pill"
+                                className="absolute inset-0 z-0 bg-purple-600"
+                                style={{ borderRadius: 8 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            />
+                        )}
+                        <span className={`relative z-10 ${showPublic === tab.value ? 'text-white' : 'text-zinc-300'}`}>{tab.label}</span>
+                    </button>
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans_serif] flex">
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-                
-                @keyframes fadeInDown {
-                    from { opacity: 0; transform: translateY(-20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-
-                .animate-fadeInDown { animation: fadeInDown 0.5s ease-out forwards; }
-                .animate-fadeInUp { animation: fadeInUp 0.5s ease-out forwards; }
-                .animate-spin { animation: spin 1s linear infinite; }
-
-                .toggle-checkbox:checked { background-color: #14b8a6; }
-                .toggle-checkbox:checked + .toggle-label { background-color: #14b8a6; }
-                .toggle-checkbox:checked + .toggle-label .toggle-ball { transform: translateX(100%); }
-             `}</style>
+            <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
             <Background />
             <Sidebar />
             <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
-                <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 animate-fadeInDown">
+                <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-bold text-white">Seus Contêineres</h1>
                         <p className="text-zinc-400 mt-1">Gerencie, monitore e escale seus servidores.</p>
                     </div>
-                    {user?.admin && (
-                        <div className="flex items-center gap-3">
-                            <span className={`font-semibold text-sm transition-colors text-white`}>{showPublic ? 'Outros servidores' : 'Meus Servidores'}</span>
-                            <label htmlFor="server-toggle" className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="server-toggle" className="sr-only peer" checked={showPublic} onChange={() => setShowPublic(!showPublic)} />
-                                <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-teal-500/50 peer-checked:bg-teal-900 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:peer-checked:translate-x-full after:peer-checked:border-white"></div>
-                            </label>
-                        </div>
-                    )}
+                    <div className="flex items-center gap-4">
+                        {hasCategorizableServers && (
+                            <button onClick={() => setCategorizationEnabled(!categorizationEnabled)} className={`p-2 rounded-lg transition-colors ${categorizationEnabled ? 'bg-purple-600 text-white' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`} title="Alternar Categorias">
+                                <Icon name="filter" className="w-5 h-5" />
+                            </button>
+                        )}
+                        {user?.admin && <AdminViewSwitch showPublic={showPublic} setShowPublic={setShowPublic} />}
+                    </div>
                 </header>
 
-                {isLoading && serversToShow.length === 0 ? (
-                    <div className="text-center py-10 text-zinc-400 animate-fadeInUp">Carregando servidores...</div>
-                ) : serversToShow.length > 0 ? (
-                    <div className="flex flex-col gap-4">
-                        {serversToShow.map((server, index) => (
-                            <div key={server.id} className="animate-fadeInUp" style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'backwards' }}>
-                                <ServerRow server={server} />
+                <AnimatePresence>
+                    {categorizationEnabled && hasCategorizableServers && (
+                        <motion.div layout initial={{ opacity: 0, height: 0, y: -20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0, y: -20, marginBottom: 0 }} className="flex flex-wrap items-center gap-2 mb-6">
+                            {categories.map(category => (
+                                <button key={category} onClick={() => setSelectedCategory(category)} className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors ${selectedCategory === category ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20' : 'bg-zinc-800/70 text-zinc-300 hover:bg-zinc-700'}`}>
+                                    {category}
+                                </button>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={showPublic ? 'public' : 'my'}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {isLoading && filteredServers.length === 0 ? (
+                            <div className="text-center py-10 text-zinc-400">Carregando servidores...</div>
+                        ) : filteredServers.length > 0 ? (
+                            <motion.div layout className="flex flex-col gap-4">
+                                <AnimatePresence initial={false}>
+                                    {filteredServers.map((server) => (
+                                        <motion.div key={server.id} layout="position" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+                                            <ServerRow server={server} />
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </motion.div>
+                        ) : (
+                            <div className="text-center py-10 bg-zinc-900/30 rounded-lg">
+                                <p className="text-zinc-400">Nenhum contêiner encontrado para os filtros selecionados.</p>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-10 bg-zinc-900/30 rounded-lg animate-fadeInUp">
-                        <p className="text-zinc-400">Nenhum contêiner encontrado.</p>
-                    </div>
-                )}
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </main>
         </div>
     );

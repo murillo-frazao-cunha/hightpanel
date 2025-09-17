@@ -169,7 +169,7 @@ const NodesContent: React.FC<NodesContainerProps> = ({ action, id }) => {
 export default function NodesContainer({ action, id }: NodesContainerProps) {
     return (
         <ToastProvider>
-            <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans-serif] flex">
+            <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans_serif] flex">
                 <style>{`
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
                     @keyframes pulse-slow { 50% { opacity: 0.6; transform: scale(1.1); } }
@@ -177,7 +177,7 @@ export default function NodesContainer({ action, id }: NodesContainerProps) {
                     .animation-delay-2000 { animation-delay: 2s; }
                     .custom-checkbox { appearance: none; background-color: transparent; width: 1.15rem; height: 1.15rem; border: 2px solid #52525b; border-radius: 0.375rem; display: inline-block; position: relative; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
                     .custom-checkbox:hover { border-color: #71717a; }
-                    .custom-checkbox:checked { background-color: #14b8a6; border-color: #14b8a6; }
+                    .custom-checkbox:checked { background-color: #8b5cf6; border-color: #8b5cf6; }
                     .custom-checkbox:checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
                     .custom-scrollbar::-webkit-scrollbar { width: 8px; }
                     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

@@ -5,15 +5,10 @@ import Link from 'next/link';
 import type { Node } from '../types/NodeType';
 import {Icon} from "@/app/pages/clients/ui/Icon";
 
-interface NodeListPageProps {
-    nodes: Node[];
-    onDelete: (uuid: string) => void;
-}
-
 // Componente de helper para renderizar uma única linha de node no novo estilo de cartão.
 const NodeRow = ({ node, onDelete }: { node: Node; onDelete: (uuid: string) => void; }) => {
     const statusConfig = {
-        online: { text: 'Online', color: 'bg-teal-500' },
+        online: { text: 'Online', color: 'bg-purple-500' },
         offline: { text: 'Offline', color: 'bg-rose-500' },
     };
     const currentStatus = statusConfig[node.status] || statusConfig.offline;
@@ -47,7 +42,7 @@ const NodeRow = ({ node, onDelete }: { node: Node; onDelete: (uuid: string) => v
 
                 {/* Stats do Node */}
                 <div className="hidden lg:flex items-center gap-4 text-sm mx-6">
-                    <div title={`Status: ${currentStatus.text}`} className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${currentStatus.color === 'bg-teal-500' ? 'bg-teal-500/10 text-teal-300' : 'bg-rose-500/10 text-rose-300'}`}>
+                    <div title={`Status: ${currentStatus.text}`} className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${currentStatus.color === 'bg-purple-500' ? 'bg-purple-500/10 text-purple-300' : 'bg-rose-500/10 text-rose-300'}`}>
                         <div className={`w-2 h-2 rounded-full ${currentStatus.color}`}></div>
                         {currentStatus.text}
                     </div>
@@ -70,7 +65,8 @@ const NodeRow = ({ node, onDelete }: { node: Node; onDelete: (uuid: string) => v
 
 
 // Componente principal que renderiza a página de lista de nodes.
-const NodeListPage: React.FC<NodeListPageProps> = ({ nodes, onDelete }) => {
+// @ts-ignore
+const NodeListPage = ({ nodes, onDelete }) => {
     return (
         <>
             <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
@@ -78,7 +74,7 @@ const NodeListPage: React.FC<NodeListPageProps> = ({ nodes, onDelete }) => {
                     <h1 className="text-4xl font-bold text-white">Gerenciamento de Nodes</h1>
                     <p className="text-zinc-400 mt-1">Crie, monitore e gerencie seus nodes de aplicação.</p>
                 </div>
-                <Link href="/admin/nodes/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50">
+                <Link href="/admin/nodes/create" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-500/50">
                     <Icon name="plus" className="w-5 h-5" />
                     Criar Novo Node
                 </Link>
@@ -86,7 +82,7 @@ const NodeListPage: React.FC<NodeListPageProps> = ({ nodes, onDelete }) => {
 
             <div className="flex flex-col gap-4">
                 {nodes.length > 0 ? (
-                    nodes.map(node => (
+                    nodes.map((node: Node) => (
                         <NodeRow key={node.uuid} node={node} onDelete={onDelete} />
                     ))
                 ) : (

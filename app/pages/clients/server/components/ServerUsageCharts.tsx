@@ -139,7 +139,7 @@ export const ServerUsageCharts = () => {
                     <UsageChart
                         data={formattedHistory}
                         yAxisProps={{ domain: [0, 100], tickFormatter: (value: number) => `${value.toFixed(0)}%` }}
-                        lines={[{ key: 'cpu', name: 'CPU', color: '#22d3ee', gradientId: 'cpuGradient', unit: '%' }]}
+                        lines={[{ key: 'cpu', name: 'CPU', color: '#8b5cf6', gradientId: 'cpuGradient', unit: '%' }]}
                     />
                 </>
             </Panel>
@@ -151,7 +151,7 @@ export const ServerUsageCharts = () => {
                     <UsageChart
                         data={formattedHistory}
                         yAxisProps={{ domain: [0, totalRam], tickFormatter: (value: number) => `${value}MiB` }}
-                        lines={[{ key: 'ram', name: 'RAM', color: '#22d3ee', gradientId: 'ramGradient', unit: 'MiB' }]}
+                        lines={[{ key: 'ram', name: 'RAM', color: '#8b5cf6', gradientId: 'ramGradient', unit: 'MiB' }]}
                     />
                 </>
             </Panel>
@@ -163,7 +163,7 @@ export const ServerUsageCharts = () => {
                         <h3 className="text-base font-semibold text-zinc-200 mb-2">Network</h3>
                         <div className="flex items-center gap-2 -mt-2">
                             <CloudUpload size={16} className="text-amber-400" />
-                            <CloudDownload size={16} className="text-cyan-400" />
+                            <CloudDownload size={16} className="text-purple-400" />
                         </div>
                     </div>
                     <UsageChart
@@ -174,7 +174,7 @@ export const ServerUsageCharts = () => {
                         }}
                         lines={[
                             // -> 3. Corrigindo os nomes e a unidade para o tooltip
-                            { key: 'networkIn', name: 'Network In', color: '#22d3ee', gradientId: 'netInGradient', unit: 'KB' },
+                            { key: 'networkIn', name: 'Network In', color: '#8b5cf6', gradientId: 'netInGradient', unit: 'KB' },
                             { key: 'networkOut', name: 'Network Out', color: '#fbbf24', gradientId: 'netOutGradient', unit: 'KB' }
                         ]}
                     />

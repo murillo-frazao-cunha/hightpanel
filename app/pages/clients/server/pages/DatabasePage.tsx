@@ -4,13 +4,22 @@ import React, { useState, Fragment, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Panel } from '../../ui/Panel';
 import { Icon } from '../../ui/Icon';
-import { ConfirmModal } from '../../ui/ModalConfirm'; // Assumindo que o modal está em /ui
+import { ConfirmModal } from '../../ui/ModalConfirm';
 import { useServer } from '../context/ServerContext';
 import { createServerDatabase, deleteServerDatabase, ServerDatabase } from '../api';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const LoadingSpinner = () => (
+    <div className="h-full flex items-center justify-center">
+        <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+);
 
 // --- Helper Components ---
 
-// Modal para criar uma nova database (AGORA COM ANIMAÇÃO)
 const CreateDatabaseModal = ({ isOpen, onClose, onSubmit, isSubmitting }: any) => {
     const [dbName, setDbName] = useState('');
 
@@ -42,13 +51,13 @@ const CreateDatabaseModal = ({ isOpen, onClose, onSubmit, isSubmitting }: any) =
                                                 onChange={(e) => setDbName(e.target.value)}
                                                 disabled={isSubmitting}
                                                 placeholder="ex: `meu_site` ou `dados_players`"
-                                                className="w-full bg-zinc-800/60 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                                className="w-full bg-zinc-800/60 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
                                             />
                                         </div>
                                     </div>
                                     <div className="bg-zinc-950/50 px-6 py-3 flex justify-end gap-3">
                                         <button type="button" onClick={onClose} disabled={isSubmitting} className="px-4 py-2 rounded-lg text-sm font-semibold text-zinc-300 hover:bg-zinc-800 transition-colors">Cancelar</button>
-                                        <button type="submit" disabled={isSubmitting || !dbName} className="px-4 py-2 rounded-lg text-sm font-semibold bg-teal-500 text-white hover:bg-teal-600 transition-colors disabled:bg-zinc-700 flex items-center gap-2">
+                                        <button type="submit" disabled={isSubmitting || !dbName} className="px-4 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors disabled:bg-zinc-700 flex items-center gap-2">
                                             {isSubmitting && <Icon name="loader" className="w-4 h-4 animate-spin" />}
                                             Criar Banco de Dados
                                         </button>
@@ -63,7 +72,6 @@ const CreateDatabaseModal = ({ isOpen, onClose, onSubmit, isSubmitting }: any) =
     );
 };
 
-// Modal para exibir os detalhes (AGORA COM ANIMAÇÃO)
 const ViewDatabaseModal = ({ db, onClose }: { db: ServerDatabase | null, onClose: () => void }) => {
     const [copied, setCopied] = useState('');
 
@@ -113,11 +121,11 @@ const ViewDatabaseModal = ({ db, onClose }: { db: ServerDatabase | null, onClose
                                 </div>
                                 <div className="bg-zinc-950/50 px-6 py-3 flex justify-between gap-3 flex-col sm:flex-row sm:items-center">
                                     {db.phpmyAdminLink && (
-                                        <a href={db.phpmyAdminLink} target="_blank" rel="noreferrer" className="px-5 py-2 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-colors flex items-center gap-2">
+                                        <a href={db.phpmyAdminLink} target="_blank" rel="noreferrer" className="px-5 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center gap-2">
                                             <Icon name="globe" className="w-4 h-4" /> Abrir phpMyAdmin
                                         </a>
                                     )}
-                                    <button onClick={onClose} className="px-5 py-2 rounded-lg text-sm font-semibold bg-sky-600 text-white hover:bg-sky-700 transition-colors">Fechar</button>
+                                    <button onClick={onClose} className="px-5 py-2 rounded-lg text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-colors">Fechar</button>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>
@@ -134,7 +142,6 @@ const ViewDatabaseModal = ({ db, onClose }: { db: ServerDatabase | null, onClose
 export const DatabasesPage: React.FC = () => {
     const { server: ctxServer, isLoading: ctxLoading, refreshServer } = useServer();
 
-    // Congela o server apenas na primeira atribuição
     const serverRef = useRef(ctxServer);
     if (!serverRef.current && ctxServer) {
         serverRef.current = ctxServer;
@@ -154,17 +161,14 @@ export const DatabasesPage: React.FC = () => {
         setErrorMessage(null);
         try {
             const result = await createServerDatabase(server.id, name);
-            // Atualiza localmente já que o server é congelado
             if (result.success) {
                 if (!server.databases) server.databases = [] as any;
                 if (result.database) {
-                    // evita duplicados
                     if (!server.databases.find((d: any) => d.name === result.database?.name)) {
                         // @ts-ignore
                         server.databases.push(result.database);
                     }
                 } else {
-                    // fallback: força refresh mas manteremos server congelado (não refletirá a mudança se vier diferente)
                     await refreshServer();
                 }
                 setIsCreateModalOpen(false);
@@ -194,7 +198,7 @@ export const DatabasesPage: React.FC = () => {
     };
 
     if (isLoading || !server) {
-        return <Panel className="p-6 text-center text-zinc-400">Carregando bancos de dados...</Panel>;
+        return <LoadingSpinner />;
     }
 
     const databases = server.databases || [];
@@ -202,7 +206,7 @@ export const DatabasesPage: React.FC = () => {
     const canCreateDb = databases.length < dbLimit;
 
     return (
-        <>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
             <CreateDatabaseModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSubmit={handleCreateDatabase} isSubmitting={isSubmitting} />
             <ViewDatabaseModal db={viewingDb} onClose={() => setViewingDb(null)} />
             <ConfirmModal
@@ -225,53 +229,57 @@ export const DatabasesPage: React.FC = () => {
                     <p className="text-sm text-zinc-300">
                         Você está usando <span className="font-bold text-white">{databases.length}</span> de <span className="font-bold text-white">{dbLimit}</span> bancos de dados disponíveis.
                     </p>
-                    <button onClick={() => setIsCreateModalOpen(true)} disabled={!canCreateDb || isSubmitting} className="px-4 py-2 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all disabled:bg-zinc-700 disabled:cursor-not-allowed flex items-center gap-2">
+                    <button onClick={() => setIsCreateModalOpen(true)} disabled={!canCreateDb || isSubmitting} className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all disabled:bg-zinc-700 disabled:cursor-not-allowed flex items-center gap-2">
                         <Icon name="plus" className="w-4 h-4" />
                         Novo Banco de Dados
                     </button>
                 </Panel>
 
-                <div className="space-y-3">
-                    {databases.length > 0 ? databases.map(db => (
-                        <Panel key={db.id} className="bg-zinc-900/60 p-4 flex items-center gap-4 text-sm">
-                            <Icon name="database" className="w-6 h-6 text-zinc-400" />
-                            <div className="flex-grow grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div>
-                                    <p className="text-xs text-zinc-500">DATABASE NAME</p>
-                                    <p className="text-zinc-200 font-mono">{db.name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-500">USERNAME</p>
-                                    <p className="text-zinc-200 font-mono">{db.username}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-zinc-500">ENDPOINT</p>
-                                    <p className="text-zinc-200 font-mono">{db.host ? `${db.host}${db.port ? ':'+db.port : ''}` : db.hostId}</p>
-                                </div>
+                <motion.div layout className="space-y-3">
+                    <AnimatePresence>
+                        {databases.length > 0 ? databases.map(db => (
+                            <motion.div key={db.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}>
+                                <Panel className="bg-zinc-900/60 p-4 flex items-center gap-4 text-sm">
+                                    <Icon name="database" className="w-6 h-6 text-zinc-400" />
+                                    <div className="flex-grow grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <p className="text-xs text-zinc-500">DATABASE NAME</p>
+                                            <p className="text-zinc-200 font-mono">{db.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-zinc-500">USERNAME</p>
+                                            <p className="text-zinc-200 font-mono">{db.username}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-zinc-500">ENDPOINT</p>
+                                            <p className="text-zinc-200 font-mono">{db.host ? `${db.host}${db.port ? ':'+db.port : ''}` : db.hostId}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 ml-2">
+                                        {db.phpmyAdminLink && (
+                                            <a href={db.phpmyAdminLink} target="_blank" rel="noreferrer" className="p-2 rounded-full text-zinc-400 hover:bg-purple-500/20 hover:text-purple-400 transition-colors" title="Abrir phpMyAdmin">
+                                                <Icon name="globe" className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                        <button onClick={() => setViewingDb(db)} disabled={isSubmitting} className="p-2 rounded-full text-zinc-400 hover:bg-purple-500/20 hover:text-purple-400 transition-colors" title="Ver Detalhes">
+                                            <Icon name="eye" className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => setDbToDelete(db)} disabled={isSubmitting} className="p-2 rounded-full text-zinc-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors" title="Deletar">
+                                            <Icon name="trash" className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </Panel>
+                            </motion.div>
+                        )) : (
+                            <div className="text-center py-10 border-2 border-dashed border-zinc-800 rounded-lg">
+                                <Icon name="database" className="w-10 h-10 mx-auto text-zinc-600" />
+                                <p className="mt-2 text-zinc-500">Nenhum banco de dados foi criado ainda.</p>
                             </div>
-                            <div className="flex items-center gap-1 ml-2">
-                                {db.phpmyAdminLink && (
-                                    <a href={db.phpmyAdminLink} target="_blank" rel="noreferrer" className="p-2 rounded-full text-zinc-400 hover:bg-teal-500/20 hover:text-teal-400 transition-colors" title="Abrir phpMyAdmin">
-                                        <Icon name="globe" className="w-4 h-4" />
-                                    </a>
-                                )}
-                                <button onClick={() => setViewingDb(db)} disabled={isSubmitting} className="p-2 rounded-full text-zinc-400 hover:bg-sky-500/20 hover:text-sky-400 transition-colors" title="Ver Detalhes">
-                                    <Icon name="eye" className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => setDbToDelete(db)} disabled={isSubmitting} className="p-2 rounded-full text-zinc-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors" title="Deletar">
-                                    <Icon name="trash" className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </Panel>
-                    )) : (
-                        <div className="text-center py-10 border-2 border-dashed border-zinc-800 rounded-lg">
-                            <Icon name="database" className="w-10 h-10 mx-auto text-zinc-600" />
-                            <p className="mt-2 text-zinc-500">Nenhum banco de dados foi criado ainda.</p>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
             </div>
-        </>
+        </motion.div>
     );
 };
 

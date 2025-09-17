@@ -2,7 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import getUser from "@/backend/routes/api/userHelper";
 import {Users} from "@/backend/libs/User";
 
-
+/**
+ * Valida a força de uma senha.
+ */
+function validatePassword(password: string) {
+    if (password.length < 8) {
+        return 'A senha deve ter no mínimo 8 caracteres.';
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+        return 'A senha deve conter pelo menos uma letra minúscula.';
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+        return 'A senha deve conter pelo menos uma letra maiúscula.';
+    }
+    if (!/(?=.*\d)/.test(password)) {
+        return 'A senha deve conter pelo menos um número.';
+    }
+    if (!/(?=.*[@$!%*?&])/.test(password)) {
+        return 'A senha deve conter pelo menos um caractere especial (@, $, !, %, *, ?, &).';
+    }
+    return null; // Senha válida
+}
 
 
 /**
@@ -37,8 +57,13 @@ export async function interpretUsers(request: NextRequest, params: { [key: strin
 async function GetAllUsers() {
     try {
         const users = await Users.getAllUsers();
-        // Converte as entidades para JSON antes de enviar
-        return NextResponse.json(users.map((u: { toJSON: () => any; }) => u.toJSON()));
+        // Remove dados sensíveis antes de enviar
+        const safeUsers = users.map((u: { toJSON: () => any; }) => {
+            const userJson = u.toJSON();
+            delete userJson.passwordHash;
+            return userJson;
+        });
+        return NextResponse.json(safeUsers);
     } catch (error) {
         console.error('API Error GetAllUsers:', error);
         return NextResponse.json({ error: 'Erro ao buscar usuários.' }, { status: 500 });
@@ -55,16 +80,22 @@ async function CreateUser(request: NextRequest) {
 
     try {
         const body = await request.json();
-        console.log(body)
         const { username, email, admin, password } = body;
 
         if (!username || !email || (admin !== true && admin !== false) || !password) {
             return NextResponse.json({ error: 'Nome, e-mail, admin e senha são obrigatórios.' }, { status: 400 });
         }
 
-        // Assumindo que Users.createUser foi implementado na sua classe de lógica
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return NextResponse.json({ error: passwordError }, { status: 400 });
+        }
+
         const newUser = await Users.createUser({ name: username, email, admin, password });
-        return NextResponse.json(newUser.toJSON(), { status: 201 }); // 201 Created
+        const safeUser = newUser.toJSON();
+        delete safeUser.passwordHash;
+
+        return NextResponse.json(safeUser, { status: 201 }); // 201 Created
 
     } catch (error: any) {
         console.error('API Error CreateUser:', error);
@@ -81,16 +112,30 @@ async function CreateUser(request: NextRequest) {
  */
 async function EditUser(request: NextRequest, adminId: string) {
     if (request.method !== "POST") {
-        return NextResponse.json({ error: 'Método не permitido' }, { status: 405 });
+        return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     }
 
     try {
         const body = await request.json();
-        const { uuid, ...updateData } = body;
+        const { uuid, name, email, admin, password } = body;
 
         if (!uuid) {
             return NextResponse.json({ error: 'O UUID do usuário é obrigatório.' }, { status: 400 });
         }
+
+        // Constrói o objeto de atualização apenas com os campos permitidos
+        const updateData: { [key: string]: any } = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (admin !== undefined) updateData.admin = admin;
+        if (password !== undefined) {
+             const passwordError = validatePassword(password);
+             if (passwordError) {
+                 return NextResponse.json({ error: passwordError }, { status: 400 });
+             }
+            updateData.password = password;
+        }
+
 
         // Medida de segurança: impede que um admin remova a própria permissão
         if (uuid === adminId && updateData.admin === false) {
@@ -98,7 +143,10 @@ async function EditUser(request: NextRequest, adminId: string) {
         }
 
         const updatedUser = await Users.updateUser(uuid, updateData);
-        return NextResponse.json(updatedUser.toJSON());
+        const safeUser = updatedUser.toJSON();
+        delete safeUser.passwordHash;
+
+        return NextResponse.json(safeUser);
 
     } catch (error: any) {
         console.error('API Error EditUser:', error);
@@ -117,8 +165,9 @@ async function DeleteUser(request: NextRequest, adminId: string) {
         return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
     }
     try {
-        const body = request.method === 'POST' ? await request.json() : await request.json();
+        const body = await request.json();
         const { uuid } = body;
+
         if (!uuid) {
             return NextResponse.json({ error: 'O UUID do usuário é obrigatório.' }, { status: 400 });
         }

@@ -97,6 +97,7 @@ export async function CreateCore(request: NextRequest) {
             configSystem: body.configSystem || '{}',
             description: body.description || '',
             creatorEmail: user.email,
+            createdAt: Date.now(),
         });
         return NextResponse.json(newCore.toJSON(), { status: 201 });
     } catch (error) {
@@ -208,7 +209,7 @@ export async function ImportCore(request: NextRequest) {
         if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
         const body = await request.json();
         const payload = body.core || body;
-        delete payload.id; delete payload.uuid; delete payload.originalId; delete payload.creatorEmail;
+        delete payload.id; delete payload.uuid; delete payload.originalId;
 
         const required = ['name','installScript','startupCommand','stopCommand','dockerImages','variables','startupParser','configSystem'];
         for (const field of required) {
@@ -238,7 +239,8 @@ export async function ImportCore(request: NextRequest) {
             startupParser: typeof payload.startupParser === 'string' ? payload.startupParser : JSON.stringify(payload.startupParser || {}),
             configSystem: typeof payload.configSystem === 'string' ? payload.configSystem : JSON.stringify(payload.configSystem || {}),
             description: payload.description || '',
-            creatorEmail: user.email,
+            creatorEmail: payload.creatorEmail,
+            createdAt: Date.now(),
         });
 
         return NextResponse.json({ imported: true, core: newCore.toJSON() }, { status: 201 });

@@ -59,6 +59,7 @@ interface ServerData {
 
 
     group?: string; // opcional, pode ser usado para categorizar servidores
+    subdomain?: string; // opcional, subdomínio associado ao servidor
 }
 
 interface LogEntry {
@@ -191,6 +192,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                 const data = response.data;
                 setServer(prev => {
                     const base = prev && prev.id === data.id ? prev : {
+                        subdomain: data.subdomain,
                         dockerImage: data.dockerImage,
                         id: data.id,
                         environment: data.environment,
@@ -224,7 +226,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                         databasesQuantity: data.databasesQuantity || 0,
                         databases: Array.isArray(data.databases) ? data.databases : [],
                         addicionalAllocationsNumbers: data.addicionalAllocationsNumbers || 0,
-
+                        subdomain: data.subdomain,
                         additionalAllocation: data.additionalAllocation,
                         primaryAllocation: data.primaryAllocation,
                         group: data.group
@@ -233,6 +235,7 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                     if (cached && !prev) {
                         merged = {
                             ...merged,
+                            subdomain: data.subdomain,
                             status: cached.status,
                             cpu: cached.cpu,
                             ram: { ...merged.ram, used: cached.ramUsed, total: cached.ramTotal },
@@ -364,7 +367,6 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
         try {
             const response = await axios.post('/api/client/servers/uuid', { uuid });
             const data = response.data;
-            // preserva campos dinâmicos do server atual
             const prev = server;
             const merged: ServerData = {
                 dockerImage: data.dockerImage,
@@ -398,8 +400,10 @@ export const ServerProvider = ({ children }: { children: ReactNode }) => {
                 databases: Array.isArray(data.databases) ? data.databases : (prev?.databases || []),
                 addicionalAllocationsNumbers: data.addicionalAllocationsNumbers || prev?.addicionalAllocationsNumbers || 0,
                 additionalAllocation: data.additionalAllocation,
-                primaryAllocation: data.primaryAllocation
-            };
+                primaryAllocation: data.primaryAllocation,
+                subdomain: data.subdomain, // <-- adicionado para refletir mudanças do subdomínio
+                group: prev?.group
+            } as any;
             setServer(merged);
             return merged;
         } catch (e) {

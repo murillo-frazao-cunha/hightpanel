@@ -22,4 +22,6 @@ export interface Core {
     configSystem: string;  // JSON string
     description?: string; // novo
     creatorEmail?: string; // novo
+
+    createdAt: number;
 }

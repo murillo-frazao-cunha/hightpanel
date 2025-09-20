@@ -4,6 +4,7 @@ import {Node} from "@/backend/database/models/NodeModel";
 import {getTables} from "@/backend/database/tables/tables";
 import axios from "axios";
 import * as crypto from "node:crypto";
+import * as dns from 'dns';
 
 // Enum for node status
 export enum NodeStatus {
@@ -157,5 +158,32 @@ export class Nodes {
         const tables = await getTables();
         const nodes = await tables.nodeTable.findByParam("name", name);
         return nodes.length > 0 ? new Nodes(nodes[0]) : null;
+    }
+    
+    /**
+     * Resolves a domain to an IP address or validates an IP address.
+     * @param input - The domain name or IP address to resolve.
+     * @returns {Promise<string>} The resolved IP address.
+     */
+    async resolveIp(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const input = this.node.ip;
+            // Regular expression to check for a valid IPv4 address
+            const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+
+            if (ipRegex.test(input)) {
+                // If the input is already a valid IP address, return it
+                resolve(input);
+            } else {
+                // If the input is not an IP address, assume it's a domain and resolve it
+                dns.lookup(input, (err, address) => {
+                    if (err) {
+                        reject(new Error(`Failed to resolve domain: ${err.message}`));
+                    } else {
+                        resolve(address);
+                    }
+                });
+            }
+        });
     }
 }

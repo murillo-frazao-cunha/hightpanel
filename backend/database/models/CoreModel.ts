@@ -28,6 +28,8 @@ export interface CoreData {
     variables: string;
     description: string; // novo
     creatorEmail: string; // novo
+
+    createdAt: number
 }
 
 // 2. Crie a classe da Entidade Core
@@ -36,6 +38,8 @@ export class Core extends RedisEntity<string, CoreData> {
     declare installScript: string;
     declare startupCommand: string;
     declare stopCommand: string;
+
+    declare createdAt: number;
 
     // Getters para desserializar os campos JSON
     get dockerImages(): CoreImage[] {
@@ -76,6 +80,8 @@ export class CoreTable extends RedisTable<string, Core> {
             { name: 'variables', type: DataType.STRING, indexed: false },
             { name: 'description', type: DataType.STRING, indexed: false },
             { name: 'creatorEmail', type: DataType.STRING, indexed: true },
+
+            { name: 'createdAt', type: DataType.LONG, indexed: false },
         ];
     }
 }

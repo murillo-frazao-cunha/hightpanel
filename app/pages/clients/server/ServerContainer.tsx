@@ -16,8 +16,19 @@ import { useServer } from "@/app/pages/clients/server/context/ServerContext";
 import { sendServerAction } from "@/app/pages/clients/server/api";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@/app/pages/clients/ui/Icon";
+import SubdomainPage from "@/app/pages/clients/server/pages/SubdomainPage";
 
 // --- Tipos ---
+export interface Server {
+    uuid: string;
+    id: string;
+    name: string;
+    description: string;
+    status: 'running' | 'stopped' | 'installing' | 'error' | 'initializing';
+    subdomain?: string;
+    [key: string]: any;
+}
+
 interface ServerContainerProps {
     id: string;
     propertie?: string; // console, files, settings, etc.
@@ -101,14 +112,34 @@ export default function ServerContainer({ id, propertie }: ServerContainerProps)
 }
 
 function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
+    const { server, mutate } = useServer() as any;
     const activePage = propertie || 'console';
+
+    const handleSubdomainCreated = (subdomain: string) => {
+        if (mutate) {
+            mutate(); // Re-fetch server data to get the latest subdomain
+        } else {
+            // Fallback if mutate is not available, though less ideal
+            window.location.reload();
+        }
+    };
+
     const renderActivePage = () => {
+        if (!server) {
+            return (
+                <div className="flex items-center justify-center h-64">
+                    <div className="h-8 w-8 border-4 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+            );
+        }
+
         switch (activePage) {
             case 'files': return <FileManagerPage />;
             case 'startup': return <StartupPage />;
             case "settings": return <SettingsPage />;
             case 'network': return <NetworkPage />;
             case 'database': return <DatabasePage />;
+            case 'subdomain': return <SubdomainPage></SubdomainPage>
             case 'console':
             default:
                 return <ConsolePage />;

@@ -8,6 +8,7 @@ import { useToast } from '@/app/contexts/ToastContext';
 import AllocationRow from './AllocationRow';
 import { useRouter } from 'next/navigation';
 import { ConfirmModal } from '@/app/pages/clients/ui/ModalConfirm';
+import crypto from "crypto";
 
 interface NodeFormPageProps {
     node?: Node | null;
@@ -45,8 +46,9 @@ const NodeFormPage: React.FC<NodeFormPageProps> = ({ node, onSave, isSubmitting,
                 setIsLoadingAllocations(false);
             });
         } else {
+
             setFormData({
-                uuid: crypto.randomUUID(),
+                uuid: '',
                 name: '',
                 ip: '',
                 port: 8080,

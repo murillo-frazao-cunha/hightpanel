@@ -27,6 +27,7 @@ export interface ServerData {
     addicionalAllocationsNumbers: number;
 
     group?: string;
+    subdomain?: string;
 }
 
 
@@ -55,6 +56,7 @@ export class Servers extends RedisEntity<string, ServerData> {
     declare addicionalAllocationsNumbers: number;
 
     declare group?: string;
+    declare subdomain?: string;
 
     async getNode() {
         return Nodes.getNode(this.nodeUuid)
@@ -98,6 +100,7 @@ export class ServerTable extends RedisTable<string, Servers> {
             { name: 'addicionalAllocationsNumbers', type: DataType.LONG, indexed: false },
 
             { name: 'group', type: DataType.STRING, indexed: true },
+            { name: 'subdomain', type: DataType.STRING, indexed: true },
         ];
     }
 }

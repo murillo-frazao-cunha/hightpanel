@@ -48,6 +48,19 @@ export class Users {
     }
 
     /**
+     * Busca um usuário pelo nome de usuário.
+     * @param name - O nome de usuário a ser pesquisado.
+     * @returns Uma Promise com a entidade Profile ou null.
+     */
+    public static async getUserByName(name: string): Promise<Profile | null> {
+        const { profileTable } = await getTables();
+        const users = await profileTable.findByParam('username', name);
+        return users.length > 0 ? users[0] : null;
+    }
+
+
+
+    /**
      * Busca um usuário pelo email.
      * @param email - O email a ser pesquisado.
      * @returns Uma Promise com a entidade Profile ou null.

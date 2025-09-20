@@ -9,6 +9,8 @@ import {CoreTable} from "@/backend/database/models/CoreModel";
 import {ServerTable} from "@/backend/database/models/ServerModel";
 import {DatabaseHostTable} from "@/backend/database/models/DatabasesHosts";
 import {ApiTable} from "@/backend/database/models/ApiModel";
+import {Domains, DomainTable} from "@/backend/database/models/DomainModel";
+import {MigrationTable} from "@/backend/database/models/MigrationTable";
 
 // Interface para definir a estrutura do objeto de tabelas
 export interface ITables {
@@ -18,6 +20,10 @@ export interface ITables {
     allocationTable: AllocationTable
     serverTable: ServerTable
     databaseHostTable: DatabaseHostTable
+
+    domainsTable: DomainTable
+
+    migrationTable: MigrationTable
 
     apiTable: ApiTable
     connector: RedisConnector;
@@ -42,6 +48,8 @@ export const getTables = (): Promise<ITables> => {
 
             // 2. Inicializa e retorna o objeto com as tabelas.
             const tables: ITables = {
+                domainsTable: new DomainTable(connector),
+                migrationTable: new MigrationTable(connector),
                 profileTable: new ProfileTable(connector),
                 nodeTable: new NodeTable(connector),
                 serverTable: new ServerTable(connector),

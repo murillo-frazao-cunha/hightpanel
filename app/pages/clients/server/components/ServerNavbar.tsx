@@ -9,6 +9,7 @@ export const ServerNavbar = ({ serverId, activePage }: { serverId: string, activ
         { id: 'files', name: 'Arquivos' },
         { id: 'database', name: 'Databases' },
         { id: 'network', name: 'Rede' },
+        { id: 'subdomain', name: 'Subdomínio' },
         { id: 'startup',name: 'Inicialização' },
         { id: 'settings', name: 'Configurações' },
     ];

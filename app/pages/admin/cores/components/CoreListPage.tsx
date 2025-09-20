@@ -66,7 +66,7 @@ const CoreListPage: React.FC<CoreListPageProps> = ({ cores, onDelete, onExport, 
             </header>
             <div className="flex flex-col gap-4">
                 {cores.length > 0 ? (
-                    cores.map(core => (
+                    cores.sort((a, b) => a.createdAt - b.createdAt).map(core => (
                         <CoreRow key={core.id} core={core} onDelete={onDelete} onExport={onExport} />
                     ))
                 ) : (

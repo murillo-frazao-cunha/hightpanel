@@ -20,6 +20,7 @@ export interface Server {
     additionalAllocationIds?: string[]; // Novo campo para alocações extras
     dockerImage: string;
     environment: { [key: string]: any };
+    subdomain?: string;
 
     databasesQuantity: number;
     databases: { [key: string]: any }[]; // E isso também será uma string JSON

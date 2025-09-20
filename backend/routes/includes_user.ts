@@ -46,8 +46,8 @@ export async function createFirstUser(request: NextRequest, params: { [key: stri
     if (!/(?=.*\d)/.test(password)) {
         return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos um número.' });
     }
-    if (!/(?=.*[@$!%*?&])/.test(password)) {
-        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos um caractere especial (@, $, !, %, *, ?, &).' });
+    if (!/(?=.*[@$!%*?&_])/.test(password)) {
+        return NextResponse.json({ status: 'error', error: 'A senha deve conter pelo menos um caractere especial (_, @, $, !, %, *, ?, &).' });
     }
 
     const user = await Users.createUser({

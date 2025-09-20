@@ -28,17 +28,17 @@ body {
 /* ===== SCROLLBAR CUSTOMIZADA PARA O CONSOLE ===== */
 
 /* Define a aparência geral da scrollbar (funciona no Chrome, Edge, Safari) */
-.custom-scrollbar::-webkit-scrollbar {
+::-webkit-scrollbar {
     width: 16px; /* Largura da scrollbar */
 }
 
 /* O fundo (trilha) da scrollbar */
-.custom-scrollbar::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background: transparent; /* Fundo transparente para se mesclar com o painel */
 }
 
 /* A alça (o que você arrasta) */
-.custom-scrollbar::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background-color: #3f3f46; /* Cor cinza-zinco, combina com o tema */
     border-radius: 10px; /* Bordas arredondadas */
     border: 2px solid transparent; /* Cria um preenchimento interno */
@@ -46,7 +46,7 @@ body {
 }
 
 /* A alça ao passar o mouse por cima */
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
     background-color: #52525b; /* Um tom de zinco um pouco mais claro */
 }
 

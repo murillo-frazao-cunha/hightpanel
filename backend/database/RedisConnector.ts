@@ -1,6 +1,7 @@
 import Redis, { Redis as RedisClient, RedisOptions } from 'ioredis';
 import { Buffer } from 'buffer';
 import crypto from 'crypto';
+import Console from "@/backend/console";
 
 // --- INTERFACES E TIPOS (mantidos do seu código original) ---
 
@@ -41,6 +42,8 @@ export class RedisConnector {
     private readonly encryptionKey: string | undefined;
     private readonly iv_separator = ':'; // Separador para IV e dados criptografados
 
+    isOnStart = false
+
     constructor(dbConfig: DatabaseConfig, encryptionKey?: string) {
         this.config = dbConfig;
         this.encryptionKey = encryptionKey;
@@ -58,56 +61,59 @@ export class RedisConnector {
     }
 
     public async connect(): Promise<void> {
-        const redisOptions: RedisOptions = {
-            ...this.config,
-            // Garante que o ioredis tentará reconectar indefinidamente.
-            maxRetriesPerRequest: null,
-            // Define uma estratégia de reconexão com backoff exponencial para não sobrecarregar o servidor.
-            retryStrategy(times: number): number {
-                const delay = Math.min(times * 200, 5000); // Começa com 200ms e vai até 5 segundos.
-                console.log(`[Redis] Conexão perdida. Tentando reconectar em ${delay}ms (tentativa ${times}).`);
-                return delay;
-            },
-        };
-
-        this.client = new Redis(redisOptions);
-
-        // --- LISTENERS DE EVENTOS PARA MELHOR LOGGING ---
-
-        this.client.on('error', (err) => {
-            // O ioredis já tenta reconectar em erros de rede, então apenas logamos.
-            console.error('[Redis Client Error]', err);
-        });
-
-        this.client.on('connect', () => {
-            console.log(`Conectado ao Redis em ${this.config.host}:${this.config.port}`);
-        });
-
-        this.client.on('reconnecting', (delay: any) => {
-            console.log(`[Redis] Reconectando em ${delay}ms...`);
-        });
-
-        this.client.on('close', () => {
-            // Este evento é chamado quando a conexão é fechada.
-            // A estratégia de retryStrategy cuidará da tentativa de reconexão.
-            console.log('[Redis] Conexão com o Redis foi fechada.');
-        });
-
-        // O ioredis começa a conectar automaticamente. Usamos connect() para aguardar
-        // a conexão inicial, mas com um catch para não quebrar a aplicação se o Redis
-        // estiver indisponível no momento da inicialização.
         try {
-            await this.client.connect();
+            const redisOptions: RedisOptions = {
+                ...this.config,
+                db: this.config.db ?? 0, // Use db from config, default to 0
+                // Garante que o ioredis tentará reconectar indefinidamente.
+                maxRetriesPerRequest: null,
+                // Define uma estratégia de reconexão com backoff exponencial para não sobrecarregar o servidor.
+                retryStrategy(times: number): number {
+                    const delay = Math.min(times * 200, 5000); // Começa com 200ms e vai até 5 segundos.
+                    Console.logCustomLevel('REDIS', true,`Conexão perdida. Tentando reconectar em ${delay}ms (tentativa ${times}).`);
+                    return delay;
+                },
+            };
+
+            this.client = new Redis(redisOptions);
+
+            // --- LISTENERS DE EVENTOS PARA MELHOR LOGGING ---
+
+            this.client.on('error', (err) => {
+                // O ioredis já tenta reconectar em erros de rede, então apenas logamos.
+                console.error('[Redis Client Error]', err);
+            });
+
+            this.client.on('connect', () => {
+                if(this.isOnStart) {
+                    Console.logCustomLevel('REDIS', true,`Conectado ao Redis com sucesso!`);
+                }
+            });
+
+            this.client.on('reconnecting', (delay: any) => {
+                Console.logCustomLevel('REDIS', true,`Reconectando em ${delay}ms...`);
+            });
+
+            this.client.on('close', () => {
+                // Este evento é chamado quando a conexão é fechada.
+                // A estratégia de retryStrategy cuidará da tentativa de reconexão.
+                Console.logCustomLevel('REDIS', false,'Conexão com o Redis foi fechada.');
+            });
+
+            // Aguarda o evento 'ready' para garantir que está conectado
+            await new Promise<void>((resolve, reject) => {
+                this.client.once('ready', () => resolve());
+                this.client.once('error', (err) => reject(err));
+            });
         } catch (error) {
-            // O erro já é logado pelo listener 'error'.
-            // Apenas informamos que a reconexão ocorrerá em segundo plano.
-            console.log('[Redis] A conexão inicial falhou. O ioredis tentará reconectar automaticamente.');
+            Console.logCustomLevel('REDIS', true,'A conexão inicial falhou. O ioredis tentará reconectar automaticamente.');
+            throw error
         }
     }
 
     public async disconnect(): Promise<void> {
         await this.client.quit();
-        console.log("Desconectado do Redis.");
+        Console.logCustomLevel('REDIS', true,"Desconectado do Redis.");
     }
 
     // --- Métodos de Criptografia e Descriptografia ---
@@ -317,7 +323,7 @@ export class RedisConnector {
         const indexedColumns = table.defineSchema().filter(col => col.indexed);
         if (indexedColumns.length === 0) return;
 
-        console.log(`Iniciando reconstrução de índices para a tabela "${table.tableName}"...`);
+        Console.logCustomLevel('REDIS', true,`Iniciando reconstrução de índices para a tabela "${table.tableName}"...`);
         const keyPrefix = `${table.tableName}:`;
         let cursor = '0';
         let itemsScanned = 0;
@@ -350,6 +356,6 @@ export class RedisConnector {
             }
         } while (cursor !== '0');
 
-        console.log(`Reconstrução de índices para "${table.tableName}" concluída. ${itemsScanned} itens processados.`);
+        Console.logCustomLevel('REDIS', false, `Reconstrução de índices para "${table.tableName}" concluída. ${itemsScanned} itens processados.`);
     }
 }

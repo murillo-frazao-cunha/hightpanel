@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base Axios instance para rotas de cliente de servidores
-const api = axios.create({
+export const api = axios.create({
     baseURL: '/api/client/servers'
 });
 
@@ -31,8 +31,14 @@ export interface ServerDatabase {
     phpmyAdminLink?: string; // link opcional para acessar phpMyAdmin
 }
 
+export interface Domain {
+    value: string; // ID do domínio
+    label: string; // Nome do domínio (ex: example.com)
+}
+
 export interface ClientServerData {
     id: string;
+    uuid: string;
     name: string;
     description?: string;
     group?: string;
@@ -45,6 +51,8 @@ export interface ClientServerData {
     primaryAllocation?: ClientServerAllocation;
     additionalAllocation?: ClientServerAllocation[];
     core?: ClientServerCore;
+    subdomain?: string;
+    addicionalAllocationsNumbers?: number;
     // --- Novos campos de databases ---
     databasesQuantity?: number;
     databases?: ServerDatabase[];
@@ -176,6 +184,39 @@ export async function getServerUsage(uuid: string): Promise<ServerUsage> {
         throw new Error(error.response?.data?.error || 'Falha ao obter uso do servidor.');
     }
 }
+
+// --- Subdomains ---
+
+export async function getAvailableDomains(): Promise<Domain[]> {
+    try {
+        const { data } = await api.get('/get-domains');
+        return data || [];
+    } catch (error: any) {
+        console.error('Erro ao buscar domínios:', error);
+        throw new Error(error.response?.data?.error || 'Falha ao buscar domínios.');
+    }
+}
+
+export async function createSubdomain(uuid: string, subdomainName: string, domainId: string): Promise<{ success: boolean; subdomain: string }> {
+    try {
+        const { data } = await api.post('/create-subdomain', { uuid, subdomainName, domainId });
+        return data;
+    } catch (error: any) {
+        console.error('Erro ao criar subdomínio:', error);
+        throw new Error(error.response?.data?.error || 'Falha ao criar subdomínio.');
+    }
+}
+
+export async function deleteSubdomain(uuid: string): Promise<{ success: boolean }> {
+    try {
+        const { data } = await api.post('/delete-subdomain', { uuid });
+        return data;
+    } catch (error: any) {
+        console.error('Erro ao deletar subdomínio:', error);
+        throw new Error(error.response?.data?.error || 'Falha ao deletar subdomínio.');
+    }
+}
+
 
 // --- Databases ---
 /**

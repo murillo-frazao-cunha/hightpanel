@@ -15,6 +15,8 @@ import DatabaseHostsContainer from "@/app/pages/admin/database-hosts/DatabaseHos
 import ServerMetadata from "@/app/routes/metadatas/ServerMetadata";
 import {ServerProvider} from "@/app/pages/clients/server/context/ServerContext";
 import ApiContainer from "@/app/pages/admin/api/ApiContainer";
+import DomainsContainer from "@/app/pages/admin/domains/DomainContainer";
+import App from "@/app/pages/Teste";
 
 // ATUALIZADO: O enum agora é exportado para ser usado pelo nosso RouteGuard.
 export enum PageLogin {
@@ -40,6 +42,12 @@ const ServerContainerWrapper = (props: any) => (
 
 
 export const routes: RouteConfig[] = [
+    {
+      pattern: '/teste',
+        component: App,
+        generateMetadata: undefined,
+        requiresLogin: PageLogin.ALL
+    },
     {
         // ATUALIZADO: A rota agora usa [[propertie]] para um segmento opcional.
         // Isso vai corresponder a /server/[id] e /server/[id]/[alguma-coisa]
@@ -121,6 +129,14 @@ export const adminRoutes: RouteConfig[] = [
         component: ApiContainer,
         generateMetadata: function (): Metadata {
             return { title: 'Ender Admin | API Keys' };
+        },
+        requiresLogin: PageLogin.ADMIN
+    },
+    {
+        pattern: '/admin/domains/[[action]]/[[id]]',
+        component: DomainsContainer,
+        generateMetadata: function (): Metadata {
+            return { title: 'Ender Admin | Domínios' };
         },
         requiresLogin: PageLogin.ADMIN
     }

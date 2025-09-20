@@ -41,9 +41,120 @@ export async function interpretServersClient(request: NextRequest, params: { [ke
             return createDatabase(currentUser, request);
         case "delete-database":
             return deleteDatabase(currentUser, request);
+        case "create-subdomain":
+            return createSubdomain(currentUser, request);
+        case "delete-subdomain":
+            return deleteSubdomain(currentUser, request);
+        case "get-domains":
+            return getDomains(currentUser, request);
         case "get-all":
         default:
             return GetAllServers(currentUser, request);
+    }
+}
+
+async function createSubdomain(currentUser: Profile, request: NextRequest) {
+    if (request.method !== "POST") {
+        return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    }
+    try {
+        const { uuid, subdomainName, domainId } = await request.json();
+        if (!uuid || !subdomainName || !domainId) {
+            return NextResponse.json({ error: 'UUID do servidor, nome do subdomínio e ID do domínio são obrigatórios.' }, { status: 400 });
+        }
+        const regex = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+        if(!regex.test(subdomainName)) {
+            return NextResponse.json({ error: 'Formato de subdomínio inválido.' }, { status: 400 });
+        }
+        const server = await ServerApi.getServer(uuid);
+        if (!server) {
+            return NextResponse.json({ error: 'Servidor não encontrado.' }, { status: 404 });
+        }
+        if (server.ownerId !== currentUser.id && !currentUser.admin) {
+            return NextResponse.json({ error: 'Acesso negado. Você não é o proprietário deste servidor.' }, { status: 403 });
+        }
+        if (server.subdomain) {
+            return NextResponse.json({ error: 'Este servidor já possui um subdomínio. Exclua-o antes de criar outro.' }, { status: 409 });
+        }
+        const { domainsTable, serverTable } = await getTables();
+        const domain = await domainsTable.get(domainId);
+        if (!domain) {
+            return NextResponse.json({ error: 'Domínio não encontrado.' }, { status: 404 });
+        }
+        const fullSubdomain = `${subdomainName}.${domain.domainName}`.toLowerCase();
+        const existingServer = await serverTable.findByParam('subdomain', fullSubdomain);
+        if (existingServer.length > 0 && existingServer[0].id !== server.id) {
+            return NextResponse.json({ error: 'Este subdomínio já está em uso por outro servidor.' }, { status: 409 });
+        }
+        // Tenta criar registros DNS padrão
+        try {
+            await domain.createDefaultDnsRecords(server, subdomainName);
+        } catch (e: any) {
+            return NextResponse.json({ error: `Erro ao criar registros DNS: ${e.message || e}` }, { status: 500 });
+        }
+        server.subdomain = fullSubdomain;
+        await server.save();
+        return NextResponse.json({ success: true, subdomain: fullSubdomain });
+    } catch (error: any) {
+        console.error('API Error createSubdomain:', error);
+        return NextResponse.json({ error: error.message || 'Ocorreu um erro interno ao criar o subdomínio.' }, { status: 500 });
+    }
+}
+
+async function deleteSubdomain(currentUser: Profile, request: NextRequest) {
+    if (request.method !== 'POST') {
+        return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    }
+    try {
+        const { uuid } = await request.json();
+        if(!uuid) return NextResponse.json({ error: 'UUID é obrigatório.' }, { status: 400 });
+        const server = await ServerApi.getServer(uuid);
+        if (!server) return NextResponse.json({ error: 'Servidor não encontrado.' }, { status: 404 });
+        if (server.ownerId !== currentUser.id && !currentUser.admin) {
+            return NextResponse.json({ error: 'Acesso negado. Você não é o proprietário deste servidor.' }, { status: 403 });
+        }
+        if(!server.subdomain) {
+            return NextResponse.json({ error: 'Servidor não possui subdomínio para remover.' }, { status: 400 });
+        }
+        // Tentativa de remover registros DNS padrão (SRV) associados
+        try {
+            const full = server.subdomain.toLowerCase();
+            const firstDot = full.indexOf('.');
+            if(firstDot > 0) {
+                const subPart = full.substring(0, firstDot);
+                const domainPart = full.substring(firstDot + 1);
+                const { domainsTable } = await getTables();
+                const allDomains = await domainsTable.getAll();
+                const domain = allDomains.find((d: any) => d.domainName?.toLowerCase() === domainPart);
+                if(domain) {
+                    await domain.removeDefaultDnsRecords(server, subPart);
+                }
+            }
+        } catch(e) {
+            console.warn('Não foi possível remover registros DNS padrão do subdomínio:', e);
+        }
+        server.subdomain = undefined as any;
+        await server.save();
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('API Error deleteSubdomain:', error);
+        return NextResponse.json({ error: error.message || 'Falha ao remover subdomínio.' }, { status: 500 });
+    }
+}
+
+async function getDomains(currentUser: Profile, request: NextRequest) {
+    if (request.method !== "GET") {
+        return NextResponse.json({ error: 'Método não permitido' }, { status: 405 });
+    }
+    try {
+        const { domainsTable } = await getTables();
+        const domains = await domainsTable.getAll();
+        // Apenas retorna domínios que o usuário pode usar (neste caso, todos)
+        const availableDomains = domains.map((d: { id: any; domainName: any; }) => ({ value: d.id, label: d.domainName }));
+        return NextResponse.json(availableDomains);
+    } catch (error: any) {
+        console.error('API Error getDomains:', error);
+        return NextResponse.json({ error: 'Erro ao buscar domínios.' }, { status: 500 });
     }
 }
 

@@ -1,7 +1,5 @@
-// app/components/server/pages/NetworkPage.tsx
 'use client';
 import React, { useState } from 'react';
-import { Panel } from '../../ui/Panel';
 import { Icon } from '../../ui/Icon';
 import { ConfirmModal } from '../../ui/ModalConfirm';
 import { useServer } from '../context/ServerContext';
@@ -10,54 +8,84 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const LoadingSpinner = () => (
     <div className="h-full flex items-center justify-center">
-        <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <svg
+            className="animate-spin h-10 w-10 text-purple-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-label="Loading"
+            role="img"
+        >
+            <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+            />
+            <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
         </svg>
     </div>
 );
 
-// --- Helper Components ---
-
-const AllocationRow = ({ allocation, isPrimary, onRemove, isSubmitting }: any) => {
+const AllocationRow = ({
+                           allocation,
+                           isPrimary,
+                           onRemove,
+                           isSubmitting,
+                       }: {
+    allocation: ClientServerAllocation;
+    isPrimary: boolean;
+    onRemove?: (allocation: ClientServerAllocation) => void;
+    isSubmitting: boolean;
+}) => {
     return (
-        <Panel className="bg-zinc-900/60 p-4 flex items-center gap-4 ">
-            <Icon name="network" className="w-6 h-6 text-zinc-500 flex-shrink-0" />
+        <div className="bg-zinc-900/60 p-5 rounded-2xl flex items-center gap-5 shadow-md shadow-black/40">
+            <Icon
+                name="network"
+                className="w-7 h-7 text-zinc-500 flex-shrink-0"
+                aria-hidden="true"
+            />
 
             <div className="flex-grow">
-                <label className="block text-xs text-zinc-400 mb-1">HOSTNAME</label>
+                <label className="block text-xs text-zinc-400 mb-1 select-none">HOSTNAME</label>
                 <input
                     type="text"
                     readOnly
                     value={`${allocation.externalIp}:${allocation.port}`}
-                    className="w-full bg-zinc-950/80  rounded-md px-3 py-1.5 text-zinc-300 font-mono text-sm cursor-copy"
+                    className="w-full bg-zinc-950/90 rounded-xl px-4 py-2 text-zinc-300 font-mono text-sm cursor-copy select-text"
                     onClick={(e) => navigator.clipboard.writeText(e.currentTarget.value)}
                     title="Clique para copiar"
+                    aria-label={`Hostname ${allocation.externalIp}:${allocation.port}, clique para copiar`}
                 />
             </div>
 
-            <div className="flex items-center gap-3 ml-auto pl-4">
+            <div className="flex items-center gap-4 ml-auto pl-6">
                 {isPrimary ? (
-                    <span className="px-3 py-1 text-xs font-bold text-white bg-purple-600 rounded-full">
+                    <span className="px-4 py-1.5 text-xs font-bold text-white bg-purple-600 rounded-full select-none">
                         Primary
                     </span>
                 ) : (
                     <button
-                        onClick={() => onRemove(allocation)}
+                        onClick={() => onRemove && onRemove(allocation)}
                         disabled={isSubmitting}
-                        className="p-2 rounded-full text-zinc-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-3 rounded-full text-zinc-400 hover:bg-rose-500/25 hover:text-rose-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Remover Alocação"
+                        aria-label={`Remover alocação ${allocation.externalIp}:${allocation.port}`}
+                        type="button"
                     >
-                        <Icon name="trash" className="w-4 h-4" />
+                        <Icon name="trash" className="w-5 h-5" />
                     </button>
                 )}
             </div>
-        </Panel>
+        </div>
     );
 };
-
-
-// --- Main Component ---
 
 export const NetworkPage: React.FC = () => {
     const { server, isLoading, refreshServer } = useServer();
@@ -74,6 +102,7 @@ export const NetworkPage: React.FC = () => {
         try {
             await changeAllocation(server.id, allocationId);
             await refreshServer();
+            setAllocationToDelete(null);
         } catch (error: any) {
             setErrorMessage(error.message || 'Ocorreu uma falha ao modificar a alocação.');
         } finally {
@@ -93,10 +122,16 @@ export const NetworkPage: React.FC = () => {
 
     const primaryAllocation = server.primaryAllocation;
     const additionalAllocations = server.additionalAllocation || [];
-    const canAddMore = additionalAllocations.length < (server.addicionalAllocationsNumbers || 0);
+    const maxAdditional = server.addicionalAllocationsNumbers || 0;
+    const canAddMore = additionalAllocations.length < maxAdditional;
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="flex flex-col gap-8"
+        >
             <ConfirmModal
                 isOpen={!!allocationToDelete}
                 onClose={() => setAllocationToDelete(null)}
@@ -106,52 +141,78 @@ export const NetworkPage: React.FC = () => {
                 confirmText="Sim, Remover"
             />
 
-            <div className="flex flex-col gap-6">
-                {errorMessage && (
-                    <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-lg flex items-center text-sm">
-                        <Icon name="alert-triangle" className="w-5 h-5 mr-2 flex-shrink-0" />
-                        {errorMessage}
-                    </div>
-                )}
+            {errorMessage && (
+                <div className="bg-rose-600/20 border border-rose-500/40 text-rose-300 p-4 rounded-2xl flex items-center gap-3 text-sm select-none shadow-md shadow-rose-700/40">
+                    <Icon name="alert-triangle" className="w-5 h-5 flex-shrink-0" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
 
-                <motion.div layout className="space-y-4">
-                    <AnimatePresence>
-                        {primaryAllocation && (
-                             <motion.div key="primary" layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                                <AllocationRow
-                                    allocation={primaryAllocation}
-                                    isPrimary={true}
-                                    isSubmitting={isSubmitting}
-                                />
-                            </motion.div>
-                        )}
+            <motion.div layout className="space-y-5">
+                <AnimatePresence>
+                    {primaryAllocation && (
+                        <motion.div
+                            key="primary"
+                            layout
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                        >
+                            <AllocationRow
+                                allocation={{
+                                    ...primaryAllocation,
+                                    externalIp: primaryAllocation.externalIp ?? undefined,
+                                }}
+                                isPrimary={true}
+                                isSubmitting={isSubmitting}
+                            />
+                        </motion.div>
+                    )}
 
-                        {additionalAllocations.map(alloc => (
-                            <motion.div key={alloc.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <AllocationRow
-                                    allocation={alloc}
-                                    isPrimary={false}
-                                    onRemove={setAllocationToDelete}
-                                    isSubmitting={isSubmitting}
-                                />
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                </motion.div>
+                    {additionalAllocations.map((alloc) => (
+                        <motion.div
+                            key={alloc.id}
+                            layout
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                        >
+                            <AllocationRow
+                                allocation={{
+                                    ...alloc,
+                                    externalIp: alloc.externalIp ?? undefined,
+                                }}
+                                isPrimary={false}
+                                onRemove={setAllocationToDelete}
+                                isSubmitting={isSubmitting}
+                            />
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </motion.div>
 
-                <Panel className="bg-zinc-900/50 p-4 flex justify-between items-center mt-4">
-                    <p className="text-sm text-zinc-400">
-                        Você pode adicionar mais { (server.addicionalAllocationsNumbers || 0) - additionalAllocations.length } alocação(ões).
-                    </p>
-                    <button
-                        onClick={() => handleAllocationChange(null)}
-                        disabled={!canAddMore || isSubmitting}
-                        className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-all duration-300 disabled:bg-zinc-700 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        <Icon name={isSubmitting && !allocationToDelete ? 'loader' : 'plus'} className={`w-4 h-4 ${(isSubmitting && !allocationToDelete) && 'animate-spin'}`} />
-                        {isSubmitting && !allocationToDelete ? 'Processando...' : 'Adicionar Alocação'}
-                    </button>
-                </Panel>
+            <div className="flex justify-between items-center mt-6">
+                <p className="text-sm text-zinc-400 select-none">
+                    Você pode adicionar mais{' '}
+                    <span className="font-semibold text-white">
+                        {maxAdditional - additionalAllocations.length}
+                    </span>{' '}
+                    alocação(ões).
+                </p>
+                <button
+                    onClick={() => handleAllocationChange(null)}
+                    disabled={!canAddMore || isSubmitting}
+                    className="px-6 py-3 rounded-2xl bg-purple-700 text-white font-semibold hover:bg-purple-800 transition-colors duration-300 disabled:bg-zinc-700 disabled:cursor-not-allowed flex items-center gap-3 shadow-md shadow-purple-700/50 select-none"
+                    type="button"
+                    aria-disabled={!canAddMore || isSubmitting}
+                >
+                    <Icon
+                        name={isSubmitting && !allocationToDelete ? 'loader' : 'plus'}
+                        className={`w-5 h-5 ${isSubmitting && !allocationToDelete ? 'animate-spin' : ''}`}
+                        aria-hidden="true"
+                    />
+                    {isSubmitting && !allocationToDelete ? 'Processando...' : 'Adicionar Alocação'}
+                </button>
             </div>
         </motion.div>
     );

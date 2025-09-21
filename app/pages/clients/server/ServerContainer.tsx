@@ -1,4 +1,5 @@
 'use client';
+
 import { Sidebar } from '../ui/Sidebar';
 import { Background } from '../ui/Background';
 import { ServerHeader } from './components/ServerHeader';
@@ -61,14 +62,14 @@ const HeaderActionButtons = () => {
     };
 
     const buttons: { label: string; icon: string; color: string; action: 'start' | 'restart' | 'stop' | 'kill' }[] = [
-        { label: 'Ligar', icon: 'play', color: 'text-green-400 hover:bg-green-500/10 border-green-500/30 hover:border-green-500/80', action: 'start' },
-        { label: 'Desligar', icon: 'power', color: 'text-rose-400 hover:bg-rose-500/10 border-rose-500/30 hover:border-rose-500/80', action: 'stop' },
-        { label: 'Reiniciar', icon: 'refresh', color: 'text-purple-400 hover:bg-purple-500/10 border-purple-500/30 hover:border-purple-500/80', action: 'restart' },
-        { label: 'Matar', icon: 'skull', color: 'text-amber-400 hover:bg-amber-500/10 border-amber-500/30 hover:border-amber-500/80', action: 'kill' }
+        { label: 'Ligar', icon: 'play', color: 'text-green-400 hover:bg-green-500/20 border-green-500/40 hover:border-green-500/90', action: 'start' },
+        { label: 'Desligar', icon: 'power', color: 'text-rose-400 hover:bg-rose-500/20 border-rose-500/40 hover:border-rose-500/90', action: 'stop' },
+        { label: 'Reiniciar', icon: 'refresh', color: 'text-purple-400 hover:bg-purple-500/20 border-purple-500/40 hover:border-purple-500/90', action: 'restart' },
+        { label: 'Matar', icon: 'skull', color: 'text-amber-400 hover:bg-amber-500/20 border-amber-500/40 hover:border-amber-500/90', action: 'kill' }
     ];
 
     return (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-4">
             {buttons.map(btn => {
                 const isDisabled = disabledMap[btn.action] || !!loading;
                 const isCurrent = loading === btn.action;
@@ -78,19 +79,25 @@ const HeaderActionButtons = () => {
                         title={nodeOffline ? 'Node offline' : btn.label}
                         disabled={isDisabled}
                         onClick={() => handleClick(btn.action)}
-                        className={`relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg bg-zinc-900/50 border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${btn.color}`}
-                        whileHover={{ scale: isDisabled ? 1 : 1.05 }}
+                        className={`relative flex flex-col items-center justify-center gap-1.5 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-700/40 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-md ${btn.color} backdrop-blur-sm`}
+                        whileHover={{ scale: isDisabled ? 1 : 1.07 }}
                         whileTap={{ scale: isDisabled ? 1 : 0.95 }}
+                        aria-label={btn.label}
                     >
                         <AnimatePresence>
                             {isCurrent && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center">
-                                    <div className="h-5 w-5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 flex items-center justify-center bg-zinc-900/70 rounded-2xl"
+                                >
+                                    <div className="h-6 w-6 border-4 border-zinc-400 border-t-transparent rounded-full animate-spin" />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                         <div className={`transition-opacity ${isCurrent ? 'opacity-0' : 'opacity-100'}`}>
-                            <Icon name={btn.icon} className="w-5 h-5 mx-auto" />
+                            <Icon name={btn.icon} className="w-6 h-6 mx-auto" />
                         </div>
                     </motion.button>
                 );
@@ -102,8 +109,10 @@ const HeaderActionButtons = () => {
 // --- Componente Principal ---
 export default function ServerContainer({ id, propertie }: ServerContainerProps) {
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-200 font-['Inter',_sans_serif] flex">
-            <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
+        <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-zinc-200 font-['Inter',_sans_serif] flex">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            `}</style>
             <Background />
             <Sidebar />
             <ServerContent id={id} propertie={propertie} />
@@ -119,7 +128,6 @@ function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
         if (mutate) {
             mutate(); // Re-fetch server data to get the latest subdomain
         } else {
-            // Fallback if mutate is not available, though less ideal
             window.location.reload();
         }
     };
@@ -128,7 +136,7 @@ function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
         if (!server) {
             return (
                 <div className="flex items-center justify-center h-64">
-                    <div className="h-8 w-8 border-4 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="h-10 w-10 border-4 border-zinc-400 border-t-transparent rounded-full animate-spin" />
                 </div>
             );
         }
@@ -139,7 +147,7 @@ function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
             case "settings": return <SettingsPage />;
             case 'network': return <NetworkPage />;
             case 'database': return <DatabasePage />;
-            case 'subdomain': return <SubdomainPage></SubdomainPage>
+            case 'subdomain': return <SubdomainPage />;
             case 'console':
             default:
                 return <ConsolePage />;
@@ -151,30 +159,28 @@ function ServerContent({ id, propertie }: { id: string; propertie?: string }) {
             <ServerHeader />
             <ServerNavbar serverId={id} activePage={activePage} />
 
-            <div className="mt-4 flex flex-col lg:flex-row gap-8">
-                <div className="w-full lg:w-3/4">
+            <div className="mt-6 flex flex-col lg:flex-row gap-10 lg:items-start">
+                <div className="w-full lg:w-3/4 rounded-2xl bg-zinc-900/40 backdrop-blur-xl p-6 shadow-lg shadow-black/40 border border-zinc-700/40">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activePage}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
                         >
                             {renderActivePage()}
                         </motion.div>
                     </AnimatePresence>
                 </div>
-                <div className="w-full lg:w-1/4 flex flex-col gap-4">
+                <aside className="w-full lg:w-1/4 flex flex-col gap-6">
                     <HeaderActionButtons />
-                    <ServerStats />
-                </div>
+                    <ServerStats  />
+                </aside>
             </div>
 
             {activePage === 'console' && (
-                <div className="mt-8">
-                    <ServerUsageCharts />
-                </div>
+                <ServerUsageCharts />
             )}
         </main>
     );

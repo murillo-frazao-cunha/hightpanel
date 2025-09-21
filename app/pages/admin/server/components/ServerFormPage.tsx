@@ -59,7 +59,7 @@ const CustomSelect = ({ options, value, onChange, placeholder, disabled = false 
                 type="button"
                 disabled={disabled}
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-left flex justify-between items-center focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-left flex justify-between items-center focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className={selectedOption ? 'text-white' : 'text-zinc-500'}>
                     {selectedOption ? selectedOption.label : placeholder}
@@ -74,7 +74,7 @@ const CustomSelect = ({ options, value, onChange, placeholder, disabled = false 
                             <li
                                 key={`${option.value}-${index}`}
                                 onClick={() => { if (!optDisabled) handleSelect(option.value); }}
-                                className={`px-4 py-2 text-white ${optDisabled ? 'opacity-40 cursor-not-allowed line-through' : 'hover:bg-teal-500/20 cursor-pointer'}`}
+                                className={`px-4 py-2 text-white ${optDisabled ? 'opacity-40 cursor-not-allowed line-through' : 'hover:bg-purple-700/20 cursor-pointer'}`}
                                 aria-disabled={optDisabled}
                             >
                                 {option.label}
@@ -330,23 +330,23 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                     {/* nome */}
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-zinc-400 mb-2">Nome do Servidor</label>
-                        <input id="name" name="name" value={formData.name || ''} onChange={(e) => handleChange(e.target.name, e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all"/>
+                        <input id="name" name="name" value={formData.name || ''} onChange={(e) => handleChange(e.target.name, e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none transition-all"/>
                     </div>
                     {/* dono */}
                     <div className="relative">
                         <label htmlFor="owner" className="block text-sm font-medium text-zinc-400 mb-2">Dono do Servidor</label>
-                        <input id="owner" value={ownerQuery} onChange={(e) => setOwnerQuery(e.target.value)} placeholder="Pesquise por email ou nome..." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all"/>
+                        <input id="owner" value={ownerQuery} onChange={(e) => setOwnerQuery(e.target.value)} placeholder="Pesquise por email ou nome..." className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none transition-all"/>
                         {isSearchingUsers && <Icon name="refresh" className="w-5 h-5 animate-spin absolute right-3 top-10 text-zinc-400" />}
                         {ownerResults.length > 0 && (
                             <ul className="absolute z-10 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg max-h-60 overflow-auto">
-                                {ownerResults.map(user => <li key={user.id} onClick={() => handleOwnerSelect(user)} className="px-4 py-2 text-white hover:bg-teal-500/20 cursor-pointer">{user.username} ({user.email})</li>)}
+                                {ownerResults.map(user => <li key={user.id} onClick={() => handleOwnerSelect(user)} className="px-4 py-2 text-white hover:bg-purple-700/20 cursor-pointer">{user.username} ({user.email})</li>)}
                             </ul>
                         )}
                     </div>
                     {/* descricao */}
                     <div>
                         <label htmlFor="description" className="block text-sm font-medium text-zinc-400 mb-2">Descrição</label>
-                        <textarea id="description" name="description" value={formData.description || ''} onChange={(e) => handleChange(e.target.name, e.target.value)} rows={3} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all custom-scrollbar"></textarea>
+                        <textarea id="description" name="description" value={formData.description || ''} onChange={(e) => handleChange(e.target.name, e.target.value)} rows={3} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-500 focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none transition-all custom-scrollbar"></textarea>
                     </div>
                 </div>
             </div>
@@ -360,23 +360,23 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                 <div className="p-6 grid grid-cols-1 sm:grid-cols-5 gap-6">
                     <div>
                         <label htmlFor="cpu" className="block text-sm font-medium text-zinc-400 mb-2">CPU (%)</label>
-                        <input id="cpu" type="number" name="cpu" value={formData.cpu ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+                        <input id="cpu" type="number" name="cpu" value={formData.cpu ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="ram" className="block text-sm font-medium text-zinc-400 mb-2">RAM (MB)</label>
-                        <input id="ram" type="number" name="ram" value={formData.ram ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+                        <input id="ram" type="number" name="ram" value={formData.ram ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="disk" className="block text-sm font-medium text-zinc-400 mb-2">Disco (MB)</label>
-                        <input id="disk" type="number" name="disk" value={formData.disk ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+                        <input id="disk" type="number" name="disk" value={formData.disk ?? ''} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="databasesQuantity" className="block text-sm font-medium text-zinc-400 mb-2">Databases Máx.</label>
-                        <input id="databasesQuantity" type="number" name="databasesQuantity" value={formData.databasesQuantity ?? 0} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+                        <input id="databasesQuantity" type="number" name="databasesQuantity" value={formData.databasesQuantity ?? 0} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none" />
                     </div>
                     <div>
                         <label htmlFor="addicionalAllocationsNumbers" className="block text-sm font-medium text-zinc-400 mb-2">Alocações Extras Máx.</label>
-                        <input id="addicionalAllocationsNumbers" type="number" name="addicionalAllocationsNumbers" value={formData.addicionalAllocationsNumbers ?? 0} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 outline-none" />
+                        <input id="addicionalAllocationsNumbers" type="number" name="addicionalAllocationsNumbers" value={formData.addicionalAllocationsNumbers ?? 0} onChange={(e) => handleChange(e.target.name, e.target.valueAsNumber)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-700/50 focus:border-purple-700 outline-none" />
                     </div>
                 </div>
             </div>
@@ -424,7 +424,7 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                                     disabled={availableAllocations.length === 0}
                                 />
                             </div>
-                            <button onClick={handleAddAllocation} disabled={!newAllocationToAdd} className="px-4 py-2.5 rounded-lg bg-teal-500/80 text-white font-semibold hover:bg-teal-600 transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed">Adicionar</button>
+                            <button onClick={handleAddAllocation} disabled={!newAllocationToAdd} className="px-4 py-2.5 rounded-lg bg-purple-700/80 text-white font-semibold hover:bg-teal-600 transition-colors disabled:bg-zinc-600 disabled:cursor-not-allowed">Adicionar</button>
                         </div>
                     </div>
                     {(formData.additionalAllocationIds && formData.additionalAllocationIds.length > 0) && (
@@ -479,7 +479,7 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                                     <div>
                                         <label className="block text-sm font-medium text-zinc-400 mb-1">{variable.name}</label>
                                         <p className="text-xs text-zinc-500 mb-2">{variable.description}</p>
-                                        <input value={formData.environment?.[variable.envVariable] || ''} onChange={(e) => handleEnvVarChange(variable.envVariable, e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-teal-500/50 focus:border-teal-500 outline-none transition-all"/>
+                                        <input value={formData.environment?.[variable.envVariable] || ''} onChange={(e) => handleEnvVarChange(variable.envVariable, e.target.value)} className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-500 focus:ring-1 focus:ring-purple-700/50 focus:border-purple-700 outline-none transition-all"/>
                                     </div>
                                 </div>
                             ))}
@@ -539,7 +539,7 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
                             { key: 'alocacao', label: 'Alocação' },
                             { key: 'configuracao', label: 'Configuração' },
                         ] as const).map(tab => (
-                            <button key={tab.key} onClick={() => changeTab(tab.key)} className={`px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${activeTab === tab.key ? 'text-white border-b-2 border-teal-500' : 'text-zinc-400 hover:text-white'}`}>{tab.label}</button>
+                            <button key={tab.key} onClick={() => changeTab(tab.key)} className={`px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${activeTab === tab.key ? 'text-white border-b-2 border-purple-700' : 'text-zinc-400 hover:text-white'}`}>{tab.label}</button>
                         ))}
                     </div>
                     <div className="animate-[fadeIn_0.25s_ease]">
@@ -553,7 +553,7 @@ const ServerFormPage: React.FC<ServerFormPageProps> = ({ server, onSave, isSubmi
 
             <div className="mt-10 border-t border-zinc-700/50 pt-6 flex justify-end gap-4">
                 <Link href="/admin/servers" className="px-5 py-2.5 rounded-lg bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50 transition-colors">Cancelar</Link>
-                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-teal-500/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
+                <button onClick={handleSave} disabled={isSubmitting} className="px-6 py-2.5 rounded-lg bg-purple-700 text-white font-semibold hover:bg-teal-600 transition-all duration-300 transform hover:scale-105 shadow-[0_0_20px_-5px] shadow-purple-700/50 disabled:bg-teal-800 disabled:scale-100 disabled:cursor-not-allowed flex items-center gap-2">
                     {isSubmitting && <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
                     {isSubmitting ? 'Salvando...' : (isEditingMode ? 'Salvar Alterações' : 'Criar Servidor')}
                 </button>

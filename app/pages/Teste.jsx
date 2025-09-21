@@ -77,7 +77,7 @@ const pages = {
                         Antes de iniciar a instalação do Ender Panel, é fundamental garantir que todas as dependências estejam presentes no seu sistema. O painel foi desenvolvido em Node.js, então você precisará do Node.js (recomendado v22 ou superior), npm, Redis para persistência dos dados, Git para baixar os arquivos do projeto, além de utilitários como unzip para descompactar arquivos.<br/><br/>
                         Abaixo estão os comandos para instalar todas as dependências em sistemas baseados em Debian/Ubuntu. Se estiver usando outro sistema operacional, consulte o gerenciador de pacotes correspondente para instalar os mesmos componentes.
                     </p>
-                    <pre className="language-bash"><code>{`
+                    <pre className="language-bash"><code className="language-bash">{`
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
@@ -99,7 +99,7 @@ sudo apt install -y nodejs git redis-server unzip
                         Após instalar o Redis, é importante configurar o serviço para garantir a persistência dos dados. Por padrão, o Redis pode não salvar os dados em disco, o que pode causar perda de informações em caso de reinicialização do servidor.<br/><br/>
                         Para isso, edite o arquivo <code>/etc/redis/redis.conf</code> e altere as seguintes opções:
                     </p>
-                    <pre className="language-bash"><code>{`# Procure por appendonly e altere para yes
+                    <pre className="language-bash"><code className="language-bash">{`# Procure por appendonly e altere para yes
 appendonly yes
 
 # Procure por appendfsync e altere para everysec
@@ -110,7 +110,7 @@ appendfsync everysec
                         <b>appendfsync</b> define a frequência com que o Redis salva os dados em disco. O valor <b>everysec</b> faz com que o Redis grave as alterações a cada segundo, equilibrando desempenho e segurança.<br/><br/>
                         Após realizar essas alterações, reinicie o serviço do Redis para aplicar as configurações:
                     </p>
-                    <pre className="language-bash"><code>{`sudo systemctl restart redis-server`}</code></pre>
+                    <pre className="language-bash"><code className="language-bash">{`sudo systemctl restart redis-server`}</code></pre>
                 </section>
                 <section id="download-files" className="mt-12 scroll-mt-24">
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Download dos Arquivos do Painel</h2>
@@ -118,7 +118,7 @@ appendfsync everysec
                         Com as dependências instaladas e o Redis configurado, o próximo passo é criar o diretório onde o painel será instalado e baixar os arquivos do projeto. Recomenda-se utilizar o diretório <code>/var/www/enderpanel</code> para manter a organização do sistema.<br/><br/>
                         Execute os comandos abaixo para criar a pasta, acessar o diretório e baixar o pacote do painel:
                     </p>
-                    <pre className="language-bash"><code>{`
+                    <pre className="language-bash"><code className="language-bash">{`
 mkdir -p /var/www/enderpanel
 cd /var/www/enderpanel
 curl -Lo panel.zip https://github.com/murillo-frazao-cunha/hightpanel/archive/refs/heads/master.zip
@@ -136,31 +136,31 @@ unzip panel.zip
                     </p>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Antes de executar qualquer script, instale as dependências do projeto:</p>
-                        <pre className="language-bash"><code>{`npm install`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm install`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Primeiro, copie o arquivo de exemplo de variáveis de ambiente para criar sua configuração personalizada:</p>
-                        <pre className="language-bash"><code>{`cp .env.example .env`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`cp .env.example .env`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Agora gere os tokens de criptografia e autenticação necessários para o funcionamento seguro do painel:</p>
-                        <pre className="language-bash"><code>{`npm run script env:key:generate`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm run script env:key:generate`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Em seguida, execute o comando abaixo para configurar a URL do painel e o token de comunicação com os nodes:</p>
-                        <pre className="language-bash"><code>{`npm run env:setup`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm run env:setup`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Agora configure as credenciais do banco de dados que serão utilizadas pelo painel:</p>
-                        <pre className="language-bash"><code>{`npm run script env:setup:db`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm run script env:setup:db`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Execute o comando abaixo para realizar a migração do banco de dados, criando todas as tabelas necessárias:</p>
-                        <pre className="language-bash"><code>{`npm run script migrate`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm run script migrate`}</code></pre>
                     </div>
                     <div className="mb-6">
                         <p className="text-gray-700 dark:text-gray-300 font-medium mb-2">Por fim, crie o usuário administrador inicial para acessar o painel:</p>
-                        <pre className="language-bash"><code>{`npm run script user:make`}</code></pre>
+                        <pre className="language-bash"><code className="language-bash">{`npm run script user:make`}</code></pre>
                     </div>
                     <p className="mt-4 text-gray-600 dark:text-gray-400">
                         Siga cada etapa atentamente, preenchendo as informações solicitadas durante os comandos interativos. Após finalizar, seu ambiente estará pronto para iniciar o painel.
@@ -172,7 +172,7 @@ unzip panel.zip
                         Com tudo configurado, basta iniciar o painel para começar a utilizar a interface web e gerenciar seus servidores.<br/><br/>
                         Execute o comando abaixo para iniciar o Ender Panel:
                     </p>
-                    <pre className="language-bash"><code>{`npm run start`}</code></pre>
+                    <pre className="language-bash"><code className="language-bash">{`npm run start`}</code></pre>
                     <p className="mt-4 text-gray-600 dark:text-gray-400">
                         O painel estará disponível na URL configurada durante o processo de setup. Acesse pelo navegador e faça login com o usuário criado.<br/><br/>
                         Caso encontre algum erro, revise as etapas anteriores e verifique se todas as dependências estão corretamente instaladas e configuradas.
@@ -503,7 +503,7 @@ export default function App() {
                     <section id="docs" className="py-16">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                             <aside className="lg:col-span-3">
-                                <nav className="sticky top-24 space-y-6">
+                                <nav className="fixed top-[172px] space-y-6">
                                     {navigation.map((category) => (
                                         <div key={category.title}>
                                             <h3 className="text-sm font-semibold text-purple-700 dark:text-purple-400 mb-2 mt-6 first:mt-0">{category.title}</h3>
@@ -575,7 +575,7 @@ export default function App() {
                             </div>
 
                             <aside className="hidden lg:block lg:col-span-3">
-                                <div className="sticky top-24">
+                                <div className="fixed top-[172px]">
                                     {activePage && (
                                         <>
                                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Nesta Página</h3>
@@ -611,4 +611,3 @@ export default function App() {
         </div>
     );
 }
-

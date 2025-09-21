@@ -15,25 +15,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const LoadingSpinner = () => (
     <div className="h-full flex items-center justify-center">
-        <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-label="Loading" role="img">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
     </div>
 );
-
 // --- Helper Components ---
 const ActionButtonWithTooltip = ({ icon, label, onClick, className = '', disabled = false }: any) => (
     <div className="relative group z-50">
-        <button disabled={disabled} onClick={onClick} className={`p-2 rounded-md text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed ${className}`}>
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={`p-2 rounded-md text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
+            aria-label={label}
+            type="button"
+        >
             <Icon name={icon} className="w-4 h-4" />
         </button>
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-black text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-black text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none select-none">
             {label}
         </div>
     </div>
 );
-
 // --- File List View ---
 const FileManagerListView = ({ uuid, currentPath }: { uuid: string, currentPath: string }) => {
     const [items, setItems] = useState<FMItem[]>([]);
@@ -180,96 +184,321 @@ const FileManagerListView = ({ uuid, currentPath }: { uuid: string, currentPath:
     }
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="h-full flex flex-col text-sm relative" onDragEnter={onDragEnterPage}>
-            <input type="file" ref={uploadInputRef} onChange={(e) => handleFileUploads(e.target.files)} className="hidden" multiple/>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="h-full flex flex-col text-sm relative"
+            onDragEnter={onDragEnterPage}
+        >
+            <input
+                type="file"
+                ref={uploadInputRef}
+                onChange={(e) => handleFileUploads(e.target.files)}
+                className="hidden"
+                multiple
+            />
 
-            {isDraggingFile && ( <div className="absolute inset-0 bg-purple-500/20 backdrop-blur-sm z-30 flex items-center justify-center border-2 border-dashed border-purple-400 rounded-lg pointer-events-none" onDragLeave={onDragLeavePage} onDrop={onDropPage}> <div className="text-center"> <Icon name="upload-cloud" className="w-16 h-16 text-purple-300 mx-auto"/> <p className="mt-4 text-xl font-bold text-white">Solte os arquivos para fazer o upload</p> </div> </div> )}
+            {isDraggingFile && (
+                <div
+                    className="absolute inset-0 bg-purple-500/20 backdrop-blur-sm z-30 flex items-center justify-center border-2 border-dashed border-purple-400 rounded-lg pointer-events-none"
+                    onDragLeave={onDragLeavePage}
+                    onDrop={onDropPage}
+                >
+                    <div className="text-center select-none">
+                        <Icon name="upload-cloud" className="w-16 h-16 text-purple-300 mx-auto" />
+                        <p className="mt-4 text-xl font-bold text-white">Solte os arquivos para fazer o upload</p>
+                    </div>
+                </div>
+            )}
 
             <div className="flex justify-between items-center p-4 gap-4 border-b border-zinc-800/50 flex-shrink-0">
-                <div className="flex items-center text-zinc-400 flex-wrap gap-1 text-base">
-                    <button onClick={() => navigateToPath('')} className="hover:text-white">/home/enderd</button>
-                    {pathSegments.map((seg, idx) => ( <Fragment key={idx + seg}> <span className="text-zinc-500">/</span> <button onClick={() => breadcrumbClick(idx)} className="hover:text-white">{seg}</button> </Fragment> ))}
+                <div className="flex items-center text-zinc-400 flex-wrap gap-1 text-base select-none">
+                    <button onClick={() => navigateToPath('')} className="hover:text-white" type="button">
+                        /home/enderd
+                    </button>
+                    {pathSegments.map((seg, idx) => (
+                        <Fragment key={idx + seg}>
+                            <span className="text-zinc-500 select-none">/</span>
+                            <button onClick={() => breadcrumbClick(idx)} className="hover:text-white" type="button">
+                                {seg}
+                            </button>
+                        </Fragment>
+                    ))}
                 </div>
                 <div className="flex items-center gap-2">
                     {selected.size > 0 ? (
-                        <div className="flex items-center gap-2 p-1 bg-zinc-950/50 rounded-lg">
+                        <div className="flex items-center gap-2 p-1 bg-zinc-950/50 rounded-lg select-none">
                             <span className="text-zinc-400 text-xs px-2">{selected.size} selecionado(s)</span>
-                            <ActionButtonWithTooltip disabled={massBusy} icon="archive" label="Arquivar" onClick={handleMassArchive} className="hover:text-purple-400" />
-                            <ActionButtonWithTooltip disabled={massBusy} icon="trash" label="Apagar" onClick={() => { setDeletePaths(Array.from(selected)); setModal('delete'); }} className="hover:text-rose-400" />
+                            <ActionButtonWithTooltip
+                                disabled={massBusy}
+                                icon="archive"
+                                label="Arquivar"
+                                onClick={handleMassArchive}
+                                className="hover:text-purple-400"
+                            />
+                            <ActionButtonWithTooltip
+                                disabled={massBusy}
+                                icon="trash"
+                                label="Apagar"
+                                onClick={() => {
+                                    setDeletePaths(Array.from(selected));
+                                    setModal('delete');
+                                }}
+                                className="hover:text-rose-400"
+                            />
                         </div>
                     ) : (
                         <>
-                            <button onClick={() => setModal('createDir')} className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-zinc-200">Criar Pasta</button>
-                            <button onClick={() => uploadInputRef.current?.click()} className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-zinc-200">Upload</button>
-                            <button onClick={() => setModal('createFile')} className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs text-white">Novo Arquivo</button>
-                            <button onClick={() => refresh(currentPath, true)} disabled={isRefreshing} className="p-2 rounded-md hover:bg-zinc-700 disabled:opacity-50">
-                                <Icon name="refresh" className={`w-4 h-4 text-zinc-300 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            <button
+                                onClick={() => setModal('createDir')}
+                                className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-zinc-200"
+                                type="button"
+                            >
+                                Criar Pasta
+                            </button>
+                            <button
+                                onClick={() => uploadInputRef.current?.click()}
+                                className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded text-xs text-zinc-200"
+                                type="button"
+                            >
+                                Upload
+                            </button>
+                            <button
+                                onClick={() => setModal('createFile')}
+                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded text-xs text-white"
+                                type="button"
+                            >
+                                Novo Arquivo
+                            </button>
+                            <button
+                                onClick={() => refresh(currentPath, true)}
+                                disabled={isRefreshing}
+                                className="p-2 rounded-md hover:bg-zinc-700 disabled:opacity-50"
+                                type="button"
+                                aria-label="Atualizar lista"
+                            >
+                                <Icon
+                                    name="refresh"
+                                    className={`w-4 h-4 text-zinc-300 ${isRefreshing ? 'animate-spin' : ''}`}
+                                />
                             </button>
                         </>
                     )}
                 </div>
             </div>
 
-            <div className="flex items-center px-4 py-2 text-xs uppercase tracking-wider text-zinc-500 font-bold flex-shrink-0">
-                <div className="flex-grow flex items-center gap-4 ml-[6px]" onClick={toggleSelectAll}>
-                    <div className={`w-5 h-5 border-2 rounded-[4px] flex items-center justify-center transition-all duration-200 ${allSelected ? 'border-purple-400' : 'border-zinc-600'}`}>
+            <div
+                className="flex items-center px-4 py-2 text-xs uppercase tracking-wider text-zinc-500 font-bold flex-shrink-0 select-none"
+                role="checkbox"
+                aria-checked={allSelected}
+                tabIndex={0}
+                onClick={toggleSelectAll}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleSelectAll();
+                    }
+                }}
+            >
+                <div className="flex-grow flex items-center gap-4 ml-[6px]">
+                    <div
+                        className={`w-5 h-5 border-2 rounded-[4px] flex items-center justify-center transition-all duration-200 ${
+                            allSelected ? 'border-purple-400' : 'border-zinc-600'
+                        }`}
+                    >
                         {allSelected && <FiCheck className="w-4 h-4 text-purple-400" />}
                     </div>
                 </div>
             </div>
 
-            <motion.div layout ref={listContainerRef} className="flex-grow overflow-y-auto px-2 custom-scrollbar relative">
+            <motion.div
+                layout
+                ref={listContainerRef}
+                className="flex-grow overflow-y-auto px-2 custom-scrollbar relative"
+                role="list"
+                aria-label="Lista de arquivos e pastas"
+            >
                 <AnimatePresence>
-                    {error && !loading && <div className="text-rose-400 text-xs p-2">{error}</div>}
-                    {!loading && items.map(item => {
-                        const isSelected = selected.has(item.path);
-                        const isRenaming = renaming === item.path;
-                        const isDragOver = dragOverPath === item.path;
-                        return (
-                            <motion.div
-                                key={item.path}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                onClick={() => (item.type === 'folder' ? navigateToPath(item.path) : navigateToEdit(item.path))}
-                                draggable onDragStart={(e) => onDragStartItem(e, item)} onDragOver={(e) => onDragOverItem(e, item)} onDragLeave={() => setDragOverPath(null)} onDrop={(e) => onDropItem(e, item)}
-                                className={`flex items-center justify-center px-1 rounded-[4px] mt-[5px] cursor-pointer transition-colors bg-zinc-900/70 ${isSelected ? 'bg-zinc-700/60' : 'hover:bg-zinc-800/60'} ${isDragOver ? 'bg-purple-500/20 ring-1 ring-purple-500' : ''}`}
-                            >
-                                <div className="px-2.5 flex items-center justify-center cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleSelect(item.path); }}>
-                                    <input type="checkbox" checked={isSelected} className="absolute w-0 h-0 opacity-0 pointer-events-none" readOnly/>
-                                    <div className={`w-5 h-5 border-2 rounded-[4px] flex items-center justify-center transition-all duration-200 ${isSelected ? 'border-purple-400' : 'border-zinc-600'}`}>
-                                        {isSelected && <FiCheck className="w-4 h-4 text-purple-400" />}
+                    {error && !loading && (
+                        <div className="text-rose-400 text-xs p-2" role="alert">
+                            {error}
+                        </div>
+                    )}
+                    {!loading &&
+                        items.map((item) => {
+                            const isSelected = selected.has(item.path);
+                            const isRenaming = renaming === item.path;
+                            const isDragOver = dragOverPath === item.path;
+                            return (
+                                <motion.div
+                                    key={item.path}
+                                    layout
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    onClick={() =>
+                                        item.type === 'folder'
+                                            ? navigateToPath(item.path)
+                                            : navigateToEdit(item.path)
+                                    }
+                                    draggable
+                                    onDragStart={(e) => onDragStartItem(e, item)}
+                                    onDragOver={(e) => onDragOverItem(e, item)}
+                                    onDragLeave={() => setDragOverPath(null)}
+                                    onDrop={(e) => onDropItem(e, item)}
+                                    className={`flex items-center justify-center px-1 rounded-[4px] mt-[5px] cursor-pointer transition-colors bg-zinc-900/70 ${
+                                        isSelected ? 'bg-zinc-700/60' : 'hover:bg-zinc-800/60'
+                                    } ${isDragOver ? 'bg-purple-500/20 ring-1 ring-purple-500' : ''}`}
+                                    role="listitem"
+                                    aria-selected={isSelected}
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            if (item.type === 'folder') navigateToPath(item.path);
+                                            else navigateToEdit(item.path);
+                                        }
+                                    }}
+                                >
+                                    <div
+                                        className="px-2.5 flex items-center justify-center cursor-pointer"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleSelect(item.path);
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            className="absolute w-0 h-0 opacity-0 pointer-events-none"
+                                            readOnly
+                                            tabIndex={-1}
+                                        />
+                                        <div
+                                            className={`w-5 h-5 border-2 rounded-[4px] flex items-center justify-center transition-all duration-200 ${
+                                                isSelected ? 'border-purple-400' : 'border-zinc-600'
+                                            }`}
+                                        >
+                                            {isSelected && <FiCheck className="w-4 h-4 text-purple-400" />}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex-grow flex items-center gap-3 pointer-events-none pl-1">
-                                    {item.type === 'folder' ? <Icon name="folder" className="w-5 h-5 text-purple-400" /> : <Icon name="file" className="w-5 h-5 text-zinc-400" />}
-                                    {isRenaming ? (
-                                        <input autoFocus value={newName} onBlur={() => setRenaming(null)} onChange={e => setNewName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleRename(item); if (e.key === 'Escape') setRenaming(null); }} className="bg-zinc-900 rounded px-2 py-0.5 text-sm outline-none pointer-events-auto" onClick={e => e.stopPropagation()}/>
-                                    ) : (
-                                        <span className="text-zinc-200">{item.name}</span>
-                                    )}
-                                </div>
-                                <div className="w-24 flex-shrink-0 text-right text-zinc-400 text-xs pointer-events-none">{item.type==='file' && formatSize(item.size)}</div>
-                                <div className="w-48 flex-shrink-0 text-right text-zinc-400 text-xs pointer-events-none">{formatDateAgo(item.lastModified)}</div>
-                                <div className="w-40 flex-shrink-0 flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                                    {item.type === 'file' && <ActionButtonWithTooltip icon="download" label="Baixar" onClick={()=>handleDownload(item)} />}
-                                    {item.type === 'file' && (item.name.endsWith(".zip") || item.name.endsWith(".rar") || item.name.endsWith(".tar.gz")) && (
-                                        <ActionButtonWithTooltip icon="archive" label="Desarquivar" onClick={() => { handleUnarchive(item) }} />
-                                    )}
-                                    <ActionButtonWithTooltip icon="edit" label="Renomear" onClick={() => { setRenaming(item.path); setNewName(item.name); }} />
-                                    <ActionButtonWithTooltip icon="trash" label="Apagar" onClick={() => { setDeletePaths([item.path]); setModal('delete'); }} className="hover:text-rose-400"/>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                                    <div className="flex-grow flex items-center gap-3 pointer-events-none pl-1 select-text">
+                                        {item.type === 'folder' ? (
+                                            <Icon name="folder" className="w-5 h-5 text-purple-400" />
+                                        ) : (
+                                            <Icon name="file" className="w-5 h-5 text-zinc-400" />
+                                        )}
+                                        {isRenaming ? (
+                                            <input
+                                                autoFocus
+                                                value={newName}
+                                                onBlur={() => setRenaming(null)}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleRename(item);
+                                                    if (e.key === 'Escape') setRenaming(null);
+                                                }}
+                                                className="bg-zinc-900 rounded px-2 py-0.5 text-sm outline-none pointer-events-auto"
+                                                onClick={(e) => e.stopPropagation()}
+                                                aria-label={`Renomear ${item.name}`}
+                                            />
+                                        ) : (
+                                            <span className="text-zinc-200 truncate" title={item.name}>
+                                            {item.name}
+                                        </span>
+                                        )}
+                                    </div>
+                                    <div className="w-24 flex-shrink-0 text-right text-zinc-400 text-xs pointer-events-none select-text">
+                                        {item.type === 'file' && formatSize(item.size)}
+                                    </div>
+                                    <div className="w-48 flex-shrink-0 text-right text-zinc-400 text-xs pointer-events-none select-text">
+                                        {formatDateAgo(item.lastModified)}
+                                    </div>
+                                    <div
+                                        className="w-40 flex-shrink-0 flex items-center justify-end gap-1"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {item.type === 'file' && (
+                                            <ActionButtonWithTooltip
+                                                icon="download"
+                                                label="Baixar"
+                                                onClick={() => handleDownload(item)}
+                                            />
+                                        )}
+                                        {item.type === 'file' &&
+                                            (item.name.endsWith('.zip') ||
+                                                item.name.endsWith('.rar') ||
+                                                item.name.endsWith('.tar.gz')) && (
+                                                <ActionButtonWithTooltip
+                                                    icon="archive"
+                                                    label="Desarquivar"
+                                                    onClick={() => {
+                                                        handleUnarchive(item);
+                                                    }}
+                                                />
+                                            )}
+                                        <ActionButtonWithTooltip
+                                            icon="edit"
+                                            label="Renomear"
+                                            onClick={() => {
+                                                setRenaming(item.path);
+                                                setNewName(item.name);
+                                            }}
+                                        />
+                                        <ActionButtonWithTooltip
+                                            icon="trash"
+                                            label="Apagar"
+                                            onClick={() => {
+                                                setDeletePaths([item.path]);
+                                                setModal('delete');
+                                            }}
+                                            className="hover:text-rose-400"
+                                        />
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                 </AnimatePresence>
             </motion.div>
 
-            {uploads.length > 0 && ( <div className="fixed bottom-6 right-6 z-40"> <button onClick={() => setIsUploadModalOpen(true)} className="bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 cursor-pointer hover:bg-purple-500 transition-colors transform hover:scale-105"> <Icon name="loader" className="w-5 h-5 animate-spin" /> <span className="text-sm font-medium">Enviando {uploads.length} arquivo(s)...</span> </button> </div> )}
-            <UploadModal isOpen={isUploadModalOpen} uploads={uploads} onClose={() => setIsUploadModalOpen(false)} />
-            <ConfirmModal isOpen={modal === 'delete'} onClose={() => setModal(null)} onConfirm={() => handleDelete(deletePaths)} title="Confirmar Exclusão" message={`Você tem certeza que deseja apagar ${deletePaths.length} item(ns)? Esta ação não pode ser desfeita.`} confirmText="Sim, Apagar" confirmColor="rose" />
-            <InputModal isOpen={modal === 'createFile' || modal === 'createDir'} onClose={() => setModal(null)} onConfirm={(name) => handleCreate(name, modal!)} title={modal === 'createFile' ? "Criar Novo Arquivo" : "Criar Nova Pasta"} message={modal === 'createFile' ? "Digite o nome para o novo arquivo (ex: config.yml)." : "Digite o nome para a nova pasta."} placeholder={modal === 'createFile' ? "arquivo.txt" : "minha-pasta"} />
+            {uploads.length > 0 && (
+                <div className="fixed bottom-6 right-6 z-40">
+                    <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        className="bg-purple-600 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 cursor-pointer hover:bg-purple-500 transition-colors transform hover:scale-105"
+                        type="button"
+                    >
+                        <Icon name="loader" className="w-5 h-5 animate-spin" />
+                        <span className="text-sm font-medium">Enviando {uploads.length} arquivo(s)...</span>
+                    </button>
+                </div>
+            )}
+            <UploadModal
+                isOpen={isUploadModalOpen}
+                uploads={uploads}
+                onClose={() => setIsUploadModalOpen(false)}
+            />
+            <ConfirmModal
+                isOpen={modal === 'delete'}
+                onClose={() => setModal(null)}
+                onConfirm={() => handleDelete(deletePaths)}
+                title="Confirmar Exclusão"
+                message={`Você tem certeza que deseja apagar ${deletePaths.length} item(ns)? Esta ação não pode ser desfeita.`}
+                confirmText="Sim, Apagar"
+                confirmColor="rose"
+            />
+            <InputModal
+                isOpen={modal === 'createFile' || modal === 'createDir'}
+                onClose={() => setModal(null)}
+                onConfirm={(name) => handleCreate(name, modal!)}
+                title={modal === 'createFile' ? 'Criar Novo Arquivo' : 'Criar Nova Pasta'}
+                message={
+                    modal === 'createFile'
+                        ? 'Digite o nome para o novo arquivo (ex: config.yml).'
+                        : 'Digite o nome para a nova pasta.'
+                }
+                placeholder={modal === 'createFile' ? 'arquivo.txt' : 'minha-pasta'}
+            />
         </motion.div>
     );
 };
